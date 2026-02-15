@@ -45,6 +45,21 @@ GOOGLE_API_KEY=your_google_key
 HUGGINGFACEHUB_API_TOKEN=your_huggingface_token
 ```
 
+## 📚 Modules
+
+### 🔮 Embedding Models & Semantic Search
+Located in `LangChain_Models/3.EmbeddingModels/`, this module explores vector embeddings and similarity search using different providers.
+
+*   **OpenAI Embeddings**:
+    *   `1_Embedding_OpenAI_Single.py`: Generate single query embedding.
+    *   `2_Embedding_OpenAI_Docs.py`: Generate embeddings for multiple documents.
+*   **Hugging Face Embeddings**:
+    *   `3_Embedding_HuggingFace_Local.py`: Run embedding models locally (offline).
+    *   `4_Embedding_HuggingFace_Online.py`: Use Hugging Face Inference API (online).
+    *   `5_Embedding_HuggingFace_Docs.py`: Batch processing for multiple documents.
+*   **Semantic Search**:
+    *   `6_Embedded_similarity.py`: Calculate cosine similarity to find the most relevant document for a query.
+
 ## 📦 Core Technologies
 
 - **LangChain Ecosystem**: `langchain`, `langchain-core`
