@@ -1,0 +1,4 @@
+HumanMessage: I bought a pair of shoes last week (Order #12345), but they don't fit well. Can I get a refund?
+AIMessage: I'm sorry to hear they didn't fit, Shubham! Yes, you can request a refund within 30 days of purchase. Would you like me to start the return process for Order #12345?
+HumanMessage: Yes, please. How long will it take to get my money back?
+AIMessage: Once we receive the shoes back and inspect them, it usually takes 5-7 business days for the refund to appear in your original payment method.

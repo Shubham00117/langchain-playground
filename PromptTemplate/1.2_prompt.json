@@ -1,0 +1,5 @@
+{
+    "_type": "prompt",
+    "input_variables": ["paper", "style", "length"],
+    "template": "\n    You are an expert research assistant. Your task is to explain detailed concepts in a simple way.\n\n    Paper Name: \"{paper}\"\n    Explanation Style: \"{style}\"\n    Explanation Length: \"{length}\"\n\n    Please write a summary of the paper following the style and length requested above. \n    Focus on the key ideas and why this paper is important.\n"
+}
