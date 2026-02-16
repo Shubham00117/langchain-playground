@@ -13,9 +13,14 @@ A comprehensive environment for exploring and implementing Large Language Model 
 ```text
 LangChain_Project/
 ├── README.md               # Project documentation
-└── LangChain_Models/       # Core project directory
-    ├── requirements.txt    # Python dependencies
-    └── myenv/              # Virtual environment (local only)
+├── LangChain_Models/       # Core project directory
+│   ├── requirements.txt    # Python dependencies
+│   └── myenv/              # Virtual environment
+└── OutputParsers/          # Module for structured LLM responses
+    ├── pydanticoutputparser.py   # Modern Pydantic-based parsing (Recommended)
+    ├── jsonoutputparser.py       # JSON response parsing
+    ├── stroutputparser.py        # String-to-schema parsing
+    └── strcturedoutputparser_deprecated.py # Legacy implementation note
 ```
 
 ## 🛠️ Getting Started
@@ -59,6 +64,16 @@ Located in `LangChain_Models/3.EmbeddingModels/`, this module explores vector em
     *   `5_Embedding_HuggingFace_Docs.py`: Batch processing for multiple documents.
 *   **Semantic Search**:
     *   `6_Embedded_similarity.py`: Calculate cosine similarity to find the most relevant document for a query.
+
+### 🧩 Output Parsers
+Located in `OutputParsers/`, this module focuses on extracting structured data (JSON, Objects) from raw LLM text responses.
+
+*   **Modern Structured Output**:
+    *   `pydanticoutputparser.py`: Uses **Pydantic** models to define schemas and validate LLM output. This is the current industry standard for type-safe structured data.
+*   **Legacy & Specialized Parsers**:
+    *   `jsonoutputparser.py`: Direct JSON extraction.
+    *   `stroutputparser.py` & `stroutputparser1.py`: String-based output processing.
+    *   `strcturedoutputparser_deprecated.py`: Contains notes on the transition from the legacy `StructuredOutputParser` to modern `langchain_core` alternatives.
 
 ## 📦 Core Technologies
 
