@@ -16,5 +16,5 @@ vector = embeddings.embed_query(text)
 
 
 # Print results
-print(f"Vector (length {vector}):")
-
+print(f"Vector (length {len(vector)}):")
+print(vector[:5])

@@ -1,8 +1,5 @@
 from langchain_huggingface import HuggingFacePipeline
 
-# 1. Initialize the local model using from_model_id
-# pipeline_kwargs passes specific generation settings to the underlying pipeline
-# When you run this, it will download the 1.5B Qwen model (~3GB)
 llm = HuggingFacePipeline.from_model_id(
     model_id="Qwen/Qwen2.5-1.5B-Instruct",
     task="text-generation",

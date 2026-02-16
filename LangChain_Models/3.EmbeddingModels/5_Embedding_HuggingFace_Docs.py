@@ -21,4 +21,4 @@ vectors = embeddings.embed_documents(documents)
 # Print results
 print(f"Number of documents embedded: {len(vectors)}")
 print(f"First document embedding length: {len(vectors[0])}")
-print(f"First 5 values of first document: {vectors[0][:5]}")
+print(f"First document vector: {vectors}")

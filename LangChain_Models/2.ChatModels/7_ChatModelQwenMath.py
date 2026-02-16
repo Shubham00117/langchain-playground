@@ -13,7 +13,7 @@ llm = HuggingFaceEndpoint(
 model = ChatHuggingFace(llm=llm)
 
 # Invoke the model with a math question
-response = model.invoke("What is the square root of 144 plus 50?")
+response = model.invoke("What is the square root of 144 ?")
 
 # Print the content
 print(response.content)

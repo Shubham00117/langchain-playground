@@ -32,8 +32,8 @@ def calculate_score(v1, v2):
 # Get all scores
 scores = [calculate_score(query_vector, v) for v in doc_vectors]
 
-# Use the requested sorting logic to find the best match
-index, score = sorted(list(enumerate(scores)), key=lambda x: x[1])[-1]
+# Find the best match
+best_index = scores.index(max(scores))
 
 # Print only the final result
-print(documents[index])
+print(documents[best_index])
