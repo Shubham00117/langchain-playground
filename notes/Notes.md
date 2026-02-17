@@ -312,3 +312,215 @@ result = chain.invoke({"query": "John is 25 and lives in New York"})
 ```
 
 > `PydanticOutputParser(pydantic_object=Model)` → injects instructions → parses + validates → typed object.
+
+# Day 3 Notes
+
+---
+
+# Module 4: Chains
+
+---
+
+## 13. Basic Chain
+
+**Concept:** A chain is just a series of steps where data flows from one component to another. You connect a prompt, a model, and a parser together using the pipe (`|`) operator to build a complete workflow.
+
+```python
+parser = StrOutputParser()
+# simple chain connecting prompt, model, and parser
+chain = prompt | model | parser
+
+# invoke starts the flow
+result = chain.invoke({"topic": "AI"})
+```
+
+> `prompt` → `model` → `parser` → returns clean response string.
+
+---
+
+## 14. Sequential Chain
+
+**Concept:** Used when you want to perform tasks one after another, where the output of the first task is given to the second task. For example, generating a long report first and then creating a summary of that report.
+
+```python
+parser = StrOutputParser()
+# chain 1 generates a long report
+chain1 = prompt1 | model | parser
+
+# chain 2 takes string and summarizes it
+# lambda maps the string to a dictionary key that prompt2 expects
+full_chain = chain1 | (lambda x: {"text": x}) | prompt2 | model | parser
+
+result = full_chain.invoke({"topic": "Generative AI"})
+```
+
+> `chain1` output → mapped to dict → fed into `chain2` → sequential multi-step task.
+
+---
+
+## 15. Parallel Chain
+
+**Concept:** Allows you to run multiple tasks at the exact same time using the same input. Useful when you want to generate different types of content simultaneously, like study notes AND a quiz from the same text.
+
+```python
+from langchain_core.runnables import RunnableParallel
+
+parser = StrOutputParser()
+# define two chains to run at once
+parallel_chain = RunnableParallel({
+    "notes": prompt1 | model | parser,
+    "quiz": prompt2 | model | parser
+})
+
+# result will be a dictionary containing both 'notes' and 'quiz'
+result = parallel_chain.invoke({"text": data})
+```
+
+> `RunnableParallel({key: chain})` → runs all chains in parallel → returns dict of results.
+
+---
+
+## 16. Conditional Chain (Branching)
+
+**Concept:** Acts like an "if-else" statement for your AI. The chain looks at the input (or output of a previous step) and decides which path to take based on a condition you set.
+
+```python
+from langchain_core.runnables import RunnableBranch
+
+# define logic: if positive do X, if negative do Y
+branch = RunnableBranch(
+    (lambda x: x["sentiment"] == "positive", positive_chain),
+    (lambda x: x["sentiment"] == "negative", negative_chain),
+    default_chain
+)
+
+# full chain first classifies then branches
+full_chain = classification_chain | branch
+```
+
+> `RunnableBranch((condition, chain), default)` → checks condition → triggers specific branch.
+
+---
+
+# Module 5: Runnable
+
+---
+
+## 17. The Runnable Concept
+
+**Concept:** This is the common "rulebook" that all LangChain components follow. Because they all implement the `invoke()` method, they can be easily "piped" together like building blocks.
+
+```python
+# Every component (prompt, model, parser) has an .invoke() method
+# This shared interface is what allows the pipe (|) operator to work
+result = chain.invoke(input_data)
+```
+
+> `Runnable` interface → standard `.invoke()` method → allows all components to connect.
+
+---
+
+## 18. LCEL (The Pipe Operator)
+
+**Concept:** The "pipe" operator (`|`) is the heart of LangChain Expression Language. It is a visual way to show data flowing from one component to the next, automatically creating a sequence under the hood.
+
+```python
+# data flows from left to right
+# prompt logic -> model processing -> parser output extraction
+chain = prompt | model | parser
+```
+
+> `|` operator → connects runnables → creates `RunnableSequence` automatically.
+
+---
+
+## 19. RunnableSequence
+
+**Concept:** While you can use the pipe operator, you can also build chains explicitly using the `RunnableSequence` class. This is useful when you want to group pre-defined chains or logic blocks together.
+
+```python
+from langchain_core.runnables import RunnableSequence
+
+# grouping existing chains and components explicitly
+final_chain = RunnableSequence(
+    initial_chain,
+    summary_prompt,
+    model,
+    parser
+)
+```
+
+> `RunnableSequence(step1, step2, ...)` → explicit class construction of a chain.
+
+---
+
+## 20. RunnableParallel
+
+**Concept:** This is the tool that makes multi-tasking possible. By wrapping your chains in a dictionary format inside `RunnableParallel`, they all get executed at the same time.
+
+```python
+from langchain_core.runnables import RunnableParallel
+
+# dictionary keys become the labels for the parallel outputs
+chain = RunnableParallel(
+    tweet = twitter_chain,
+    linkedin = linkedin_chain
+)
+```
+
+> `RunnableParallel(name=chain)` → name-based parallel execution → returns dictionary.
+
+---
+
+## 21. RunnablePassthrough
+
+**Concept:** Think of this as a "copy-paste" tool. It takes whatever input it receives and passes it along unchanged. It's very useful when you want to keep the original data while also generating something new from it.
+
+```python
+from langchain_core.runnables import RunnablePassthrough
+
+# keeps the original joke while also generating an explanation
+chain = joke_chain | RunnableParallel({
+    "original_joke": RunnablePassthrough(),
+    "explanation": explanation_prompt | model
+})
+```
+
+> `RunnablePassthrough()` → takes input → returns it exactly as is.
+
+---
+
+## 22. RunnableLambda
+
+**Concept:** Allows you to turn any normal Python function into a LangChain component. If you have a custom bit of logic (like counting words or cleaning text) that isn't a prompt or a model, you wrap it in a lambda.
+
+```python
+from langchain_core.runnables import RunnableLambda
+
+# custom python function
+def word_count(text):
+    return len(text.split())
+
+# wrap function to use it in a chain
+chain = prompt | model | RunnableLambda(word_count)
+```
+
+> `RunnableLambda(function)` → converts Python function → into a chainable component.
+
+---
+
+## 23. RunnableBranch
+
+**Concept:** The official way to handle routing in LangChain. You provide a list of (condition, runnable) pairs, and it executes the first one where the condition is true.
+
+```python
+from langchain_core.runnables import RunnableBranch
+
+# routing based on text length
+branch = RunnableBranch(
+    (lambda x: len(x) > 500, summary_chain),
+    RunnablePassthrough() # default: if short, do nothing
+)
+```
+
+> `RunnableBranch` → list of `(if, then)` → first true condition wins.
