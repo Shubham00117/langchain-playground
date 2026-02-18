@@ -374,9 +374,17 @@ parallel_chain = RunnableParallel({
 
 # result will be a dictionary containing both 'notes' and 'quiz'
 result = parallel_chain.invoke({"text": data})
+
+#create merge chain
+merge_chain = prompt3 | model1 | parser
+
+#combine into final chain
+chain = parallel_chain | merge_chain
+
+result = chain.invoke({"text": data})
 ```
 
-> `RunnableParallel({key: chain})` → runs all chains in parallel → returns dict of results.
+> `RunnableParallel({key: chain})` → runs all chains in parallel -> merge logic → returns dict of results.
 
 ---
 
@@ -411,9 +419,17 @@ full_chain = classification_chain | branch
 **Concept:** This is the common "rulebook" that all LangChain components follow. Because they all implement the `invoke()` method, they can be easily "piped" together like building blocks.
 
 ```python
-# Every component (prompt, model, parser) has an .invoke() method
-# This shared interface is what allows the pipe (|) operator to work
-result = chain.invoke(input_data)
+# Think of .invoke() as the universal "Start" button for every component
+# Data flows: Input -> [ PROMPT ] -> [ MODEL ] -> [ PARSER ] -> Output
+
+# 1. Manual Flow (Each block has its own .invoke())
+val1 = prompt.invoke({"topic": "AI"})
+val2 = model.invoke(val1)
+final = parser.invoke(val2)
+
+# 2. Piped Flow (All blocks unified into one .invoke())
+chain = prompt | model | parser
+final = chain.invoke({"topic": "AI"})
 ```
 
 > `Runnable` interface → standard `.invoke()` method → allows all components to connect.
@@ -422,7 +438,7 @@ result = chain.invoke(input_data)
 
 ## 18. LCEL (The Pipe Operator)
 
-**Concept:** The "pipe" operator (`|`) is the heart of LangChain Expression Language. It is a visual way to show data flowing from one component to the next, automatically creating a sequence under the hood.
+**Concept:** The "pipe" operator (`|`) is the heart of LangChain Expression Language. It provides a visual and intuitive way to chain components together, allowing data to flow seamlessly from one step to the next while automatically handling the underlying logic of a `RunnableSequence`.
 
 ```python
 # data flows from left to right
@@ -436,7 +452,7 @@ chain = prompt | model | parser
 
 ## 19. RunnableSequence
 
-**Concept:** While you can use the pipe operator, you can also build chains explicitly using the `RunnableSequence` class. This is useful when you want to group pre-defined chains or logic blocks together.
+**Concept:** `RunnableSequence` is the underlying container that manages a series of steps in a chain. It can be created explicitly using the `RunnableSequence` class or automatically by using the pipe operator (`|`). It ensures that data flows through each component in the exact order they are defined.
 
 ```python
 from langchain_core.runnables import RunnableSequence
@@ -447,6 +463,14 @@ final_chain = RunnableSequence(
     summary_prompt,
     model,
     parser
+)
+
+# same chain but using pipe operator
+final_chain = (
+    initial_chain
+    | summary_prompt
+    | model
+    | parser
 )
 ```
 
@@ -474,19 +498,26 @@ chain = RunnableParallel(
 
 ## 21. RunnablePassthrough
 
-**Concept:** Think of this as a "copy-paste" tool. It takes whatever input it receives and passes it along unchanged. It's very useful when you want to keep the original data while also generating something new from it.
+**Concept:** `RunnablePassthrough` is used to capture the output of a previous step and assign it directly to a dictionary key without changing it. This allows you to "branch" the flow: one branch preserves the original result in a specific key, while other branches use that same data as input for further processing.
 
 ```python
 from langchain_core.runnables import RunnablePassthrough
 
-# keeps the original joke while also generating an explanation
-chain = joke_chain | RunnableParallel({
-    "original_joke": RunnablePassthrough(),
-    "explanation": explanation_prompt | model
+# 1. Define the initial step (e.g., generate a joke)
+joke_gen_chain = RunnableSequence(prompt1, model, parser)
+
+# 2. Create a parallel block to process the output from step 1
+# This keeps the original output while also performing a second task
+parallel_chain = RunnableParallel({
+    "original_joke": RunnablePassthrough(), # Passes the joke along unchanged
+    "explanation": explanation_prompt | model | parser # Processes the joke for an explanation
 })
+
+# 3. Combine the chains
+final_chain = joke_gen_chain | parallel_chain | parser
 ```
 
-> `RunnablePassthrough()` → takes input → returns it exactly as is.
+> `RunnablePassthrough()` → takes input data → returns it exactly as it was received.
 
 ---
 
@@ -497,12 +528,19 @@ chain = joke_chain | RunnableParallel({
 ```python
 from langchain_core.runnables import RunnableLambda
 
-# custom python function
+# Custom function to be used with RunnableLambda
 def word_count(text):
     return len(text.split())
 
-# wrap function to use it in a chain
-chain = prompt | model | RunnableLambda(word_count)
+# 2. Parallel Chain with RunnableLambda
+# RunnableLambda allows you to run custom Python functions within a chain
+parallel_chain = RunnableParallel({
+    'joke': RunnablePassthrough(),
+    'word_count': RunnableLambda(word_count)
+})
+
+# 3. Final Sequence
+final_chain = joke_gen_chain | parallel_chain | parser
 ```
 
 > `RunnableLambda(function)` → converts Python function → into a chainable component.

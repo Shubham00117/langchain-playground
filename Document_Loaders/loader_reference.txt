@@ -1,0 +1,46 @@
+LANGCHAIN DOCUMENT LOADERS: INDUSTRY STANDARDS & REAL-WORLD USES (2025)
+
+1. TextLoader
+   Real Use: Loading .txt and .md files. Standard for processing legacy documentation, readme files, and raw textual data exports.
+
+2. PyPDFLoader
+   Real Use: Fast, standard extraction for text-based PDFs. Best for digital invoices, clear reports, and e-books where speed is prioritized over complex layout parsing.
+
+3. UnstructuredPDFLoader (Industry Favorite for PDFs)
+   Real Use: Handling "messy" PDFs with two-column layouts, tables, and images. Uses OCR to extract text from scanned documents. This is the go-to for enterprise PDF processing.
+
+4. CSVLoader
+   Real Use: Loading structured data (one document per row). Ideal for CRM exports, inventory lists, and price comparisons. In industry, 'source_column' is often used to track the origin of each row.
+
+5. JSONLoader
+   Real Use: Processing API responses and nested data. Essential for dynamic apps that fetch data from web services or database exports (MongoDB/NoSQL).
+
+6. WebBaseLoader
+   Real Use: Simple scraping of plain HTML sites. Best for news articles and blog posts.
+
+7. SeleniumURLLoader / PlaywrightURLLoader
+   Real Use: Scraping modern, JavaScript-heavy websites (like React or Vue apps). Industry standard for sites where the content doesn't load until the page is fully rendered.
+
+8. UnstructuredURLLoader
+   Real Use: High-volume web research. It can automatically detect and extract content from websites even if they contain a mix of text, tables, and images.
+
+9. DirectoryLoader (The Base for RAG)
+   Real Use: Batch processing entire documentation folders. Crucial for building "Chat with your Data" features in companies with massive file systems.
+
+10. GitLoader / GitbookLoader
+    Real Use: Engineering teams use these to build developer assistants that can "understand" their entire private codebase or documentation site.
+
+11. WikipediaLoader
+    Real Use: Automated fact-checking and general knowledge augmentation. Used to build agents that verify claims against public knowledge.
+
+12. YoutubeLoader (with Transcripts)
+    Real Use: Content creation and media research. Automatically transforms video content into searchable text data.
+
+13. S3FileLoader / AzureBlobStorageLoader
+    Real Use: Production-ready cloud integration. Used in environments where files are stored in AWS/Azure buckets rather than on local disks.
+
+PRO-TIPS FOR PRODUCTION (INDUSTRY BEST PRACTICES):
+- Use .lazy_load() for large datasets to prevent memory crashes.
+- Use 'pathlib' for robust absolute path handling.
+- Always implement Text Splitters (RecursiveCharacterTextSplitter) after loading to optimize LLM performance.
+- Set a 'USER_AGENT' environment variable for all web-based loaders to avoid being blocked.

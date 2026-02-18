@@ -25,7 +25,7 @@ parallel_chain = RunnableParallel({
     'joke': RunnablePassthrough(),
     'word_count': RunnableLambda(word_count)
 })
-
+ 
 # 4. Final Sequence
 final_chain = RunnableSequence(joke_gen_chain, parallel_chain)
 
