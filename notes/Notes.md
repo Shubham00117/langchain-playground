@@ -562,3 +562,208 @@ branch = RunnableBranch(
 ```
 
 > `RunnableBranch` → list of `(if, then)` → first true condition wins.
+
+---
+
+# Day 4 Notes
+
+---
+
+# Module 6: Document Loaders
+
+---
+
+## 24. TextLoader
+
+**Concept:** The simplest loader that reads a standard `.txt` file and loads it as a Document. It treats the entire file content as one single document.
+
+```python
+from langchain_community.document_loaders import TextLoader
+
+# load the text file
+loader = TextLoader("example.txt")
+docs = loader.load()
+
+# access content
+print(docs[0].page_content)
+```
+
+> `TextLoader(path)` → loads `.txt` → returns list with 1 Document.
+
+---
+
+## 25. CSVLoader
+
+**Concept:** Loads a `.csv` file where **each row** becomes a separate Document. Ideally used when you want to treat every row (e.g., a product, a tweet) as an individual record.
+
+```python
+from langchain_community.document_loaders.csv_loader import CSVLoader
+
+# load csv where each row becomes a document
+loader = CSVLoader(file_path="data.csv")
+data = loader.load()
+
+print(len(data)) # equals number of rows
+```
+
+> `CSVLoader(path)` → iterates rows → 1 Document per row.
+
+---
+
+## 26. PyPDFLoader
+
+**Concept:** Extracts text from a PDF file. It creates one Document **per page**, preserving the page number in the metadata. Best for simple PDFs.
+
+```python
+from langchain_community.document_loaders import PyPDFLoader
+
+# load pdf, splits by page
+loader = PyPDFLoader("paper.pdf")
+pages = loader.load()
+
+# access page 1 content
+print(pages[0].page_content)
+print(pages[0].metadata) # {'source': '...', 'page': 0}
+```
+
+> `PyPDFLoader(path)` → reads PDF → 1 Document per page.
+
+---
+
+## 27. WebBaseLoader
+
+**Concept:** Scrapes text from a webpage URL. It fetches the HTML, cleans it (removes tags), and loads the readable text as a Document.
+
+```python
+from langchain_community.document_loaders import WebBaseLoader
+
+# scrape a website
+loader = WebBaseLoader("https://example.com")
+docs = loader.load()
+
+print(docs[0].page_content)
+```
+
+> `WebBaseLoader(url)` → fetches HTML → extracts text → returns Document.
+
+---
+
+## 28. DirectoryLoader
+
+**Concept:** Loads **all files** in a folder matching a pattern (like `*.pdf`). It uses a specific loader (like `PyPDFLoader`) to process each file it finds.
+
+```python
+from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
+
+# load all PDFs in 'books' folder
+loader = DirectoryLoader(
+    path='books',
+    glob='*.pdf',
+    loader_cls=PyPDFLoader
+)
+docs = loader.load()
+```
+
+> `DirectoryLoader(path, glob)` → finds files → delegates to `loader_cls` → aggregated docs.
+
+---
+
+## 29. Lazy Loading
+
+**Concept:** Instead of loading ALL documents into memory at once (which crashes RAM with big datasets), `lazy_load()` yields documents **one by one**. You process the current document and discard it before moving to the next.
+
+```python
+# standard load - high memory usage
+# docs = loader.load()
+
+# lazy load - efficient memory usage
+docs_generator = loader.lazy_load()
+
+for doc in docs_generator:
+    print(doc.page_content)
+    # process doc here, then it frees memory
+```
+
+> `lazy_load()` → returns generator → yields 1 doc at a time → saves RAM.
+
+---
+
+# Module 7: Text Splitters
+
+---
+
+## 30. CharacterTextSplitter
+
+**Concept:** Splits text purely based on a **character count** (e.g., every 100 characters). It’s the simplest method but can break words or sentences in the middle, losing context.
+
+```python
+from langchain_text_splitters import CharacterTextSplitter
+
+# simple split by character count
+splitter = CharacterTextSplitter(
+    chunk_size=100,
+    chunk_overlap=0,
+    separator=""
+)
+docs = splitter.split_documents(original_docs)
+```
+
+> `CharacterTextSplitter` → strict length split → may break sentences.
+
+---
+
+## 31. RecursiveCharacterTextSplitter
+
+**Concept:** The **standard go-to splitter**. It tries to split at smart points—first by paragraphs `\n\n`, then newlines `\n`, then spaces—to keep related text together. It only cuts words if strictly necessary to fit the chunk size.
+
+```python
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+# splits intelligently: \n\n -> \n -> space
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=500,
+    chunk_overlap=50
+)
+docs = splitter.split_documents(original_docs)
+```
+
+> `RecursiveCharacterTextSplitter` → tries smart separators → keeps context intact → best default.
+
+---
+
+## 32. Split by Language (Python/Markdown)
+
+**Concept:** A version of RecursiveSplitter giving it **specific rules** for code or markdown. For Python, it knows to split at `class` or `def`; for Markdown, at `# headers`. This keeps logical blocks (like a whole function) intact.
+
+```python
+from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
+
+# split python code keeping classes/functions together
+python_splitter = RecursiveCharacterTextSplitter.from_language(
+    language=Language.PYTHON, 
+    chunk_size=200
+)
+docs = python_splitter.create_documents([python_code])
+```
+
+> `.from_language(Language.X)` → respects syntax boundaries (functions, classes) → better for code.
+
+---
+
+## 33. SemanticChunker
+
+**Concept:** Instead of purely splitting by size, this uses **embeddings** to understand meaning. It splits text only when the **topic changes** drastically (e.g., shifting from "Roman Empire" to "Organic Chemistry"). This creates "meaning-aware" chunks.
+
+```python
+from langchain_experimental.text_splitter import SemanticChunker
+from langchain_huggingface import HuggingFaceEmbeddings
+
+# splits when semantic meaning shifts
+splitter = SemanticChunker(
+    HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2"),
+    breakpoint_threshold_type="standard_deviation"
+)
+chunks = splitter.create_documents([text])
+```
+
+> `SemanticChunker` + Embeddings → detects topic shifts → splits by meaning (not size).

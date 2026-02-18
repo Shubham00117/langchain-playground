@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vector Stores in LangChain — Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --bg2: #f8f9fa;
+            --bg3: #f1f3f5;
+            --card: #ffffff;
+            --border: #dee2e6;
+            --accent: #228be6;
+            --accent2: #fa5252;
+            --accent3: #40c057;
+            --accent4: #fab005;
+            --text: #212529;
+            --muted: #868e96;
+            --code-bg: #f8f9fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Lora', serif;
+            font-size: 15px;
+            line-height: 1.75;
+        }
+
+        /* HERO */
+        .hero {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 64px 0 48px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(79, 158, 255, 0.08) 0%, transparent 70%);
+            top: -200px;
+            right: -100px;
+        }
+
+        .hero-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 800;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #212529 30%, #228be6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+
+        .hero p {
+            color: var(--muted);
+            max-width: 600px;
+            font-size: 15px;
+        }
+
+        .hero-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+
+        .meta-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            background: var(--bg2);
+        }
+
+        /* NAV */
+        .toc {
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 48px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .toc a {
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--muted);
+            padding: 5px 12px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* LAYOUT */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 48px 48px;
+        }
+
+        /* SECTION */
+        .section {
+            margin-bottom: 72px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            background: rgba(79, 158, 255, 0.1);
+            border: 1px solid rgba(79, 158, 255, 0.3);
+            padding: 3px 10px;
+            border-radius: 4px;
+            min-width: fit-content;
+        }
+
+        .section h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* CODE */
+        pre,
+        code {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .code-header {
+            background: var(--bg3);
+            padding: 8px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-header .lang-badge {
+            background: rgba(79, 158, 255, 0.15);
+            color: var(--accent);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        pre {
+            padding: 20px;
+            font-size: 13px;
+            line-height: 1.8;
+            overflow-x: auto;
+            color: #212529;
+        }
+
+        .kw {
+            color: #d63384;
+        }
+
+        .fn {
+            color: #6f42c1;
+        }
+
+        .str {
+            color: #0d6efd;
+        }
+
+        .cm {
+            color: #adb5bd;
+            font-style: italic;
+        }
+
+        .var {
+            color: #0dcaf0;
+        }
+
+        .num {
+            color: #fd7e14;
+        }
+
+        /* HIGHLIGHT BOXES */
+        .info-box {
+            border-left: 3px solid var(--accent);
+            background: rgba(79, 158, 255, 0.06);
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
+        }
+
+        .info-box.green {
+            border-color: var(--accent3);
+            background: rgba(86, 217, 158, 0.06);
+        }
+
+        .info-box.orange {
+            border-color: var(--accent4);
+            background: rgba(255, 179, 71, 0.06);
+        }
+
+        .info-box.red {
+            border-color: var(--accent2);
+            background: rgba(255, 107, 107, 0.06);
+        }
+
+        .info-box strong {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+        }
+
+        /* DIAGRAMS */
+        .diagram-wrap {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .diagram-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        /* SVG DIAGRAM STYLES */
+        .d-box {
+            fill: var(--card);
+            stroke: var(--border);
+            stroke-width: 1.5;
+            rx: 8;
+        }
+
+        .d-box-accent {
+            fill: rgba(79, 158, 255, 0.15);
+            stroke: rgba(79, 158, 255, 0.5);
+        }
+
+        .d-box-green {
+            fill: rgba(86, 217, 158, 0.12);
+            stroke: rgba(86, 217, 158, 0.4);
+        }
+
+        .d-box-orange {
+            fill: rgba(255, 179, 71, 0.12);
+            stroke: rgba(255, 179, 71, 0.4);
+        }
+
+        .d-box-red {
+            fill: rgba(255, 107, 107, 0.12);
+            stroke: rgba(255, 107, 107, 0.4);
+        }
+
+        .d-text {
+            fill: #212529;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .d-text-sm {
+            fill: #8892a4;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+        }
+
+        .d-text-accent {
+            fill: #4f9eff;
+        }
+
+        .d-text-green {
+            fill: #56d99e;
+        }
+
+        .d-text-orange {
+            fill: #ffb347;
+        }
+
+        .d-arrow {
+            stroke: #4f9eff;
+            stroke-width: 1.5;
+            fill: none;
+            marker-end: url(#arrow);
+        }
+
+        .d-arrow-muted {
+            stroke: #4a5568;
+            stroke-width: 1.5;
+            fill: none;
+            marker-end: url(#arrow-muted);
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--bg3);
+            font-family: 'Syne', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px 16px;
+            text-align: left;
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+
+        td {
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text);
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) td {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        /* BADGE */
+        .badge {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin: 2px;
+        }
+
+        .badge-blue {
+            background: rgba(79, 158, 255, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(79, 158, 255, 0.3);
+        }
+
+        .badge-green {
+            background: rgba(86, 217, 158, 0.15);
+            color: var(--accent3);
+            border: 1px solid rgba(86, 217, 158, 0.3);
+        }
+
+        .badge-orange {
+            background: rgba(255, 179, 71, 0.15);
+            color: var(--accent4);
+            border: 1px solid rgba(255, 179, 71, 0.3);
+        }
+
+        /* STEP */
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 20px;
+            position: relative;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 17px;
+            top: 40px;
+            bottom: -8px;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(79, 158, 255, 0.1);
+            border: 1px solid rgba(79, 158, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            flex-shrink: 0;
+            z-index: 1;
+        }
+
+        .step-content {
+            padding-bottom: 24px;
+            flex: 1;
+        }
+
+        .step-content h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+            margin-top: 6px;
+        }
+
+        .step-content p {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* FEATURE LIST */
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .feature-list li::before {
+            content: '→';
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* VECTOR VIZ */
+        .vector-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            justify-content: center;
+            margin: 12px 0;
+        }
+
+        .vec-cell {
+            width: 52px;
+            height: 40px;
+            background: rgba(255, 179, 71, 0.15);
+            border: 1px solid rgba(255, 179, 71, 0.35);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent4);
+        }
+
+        .vec-dots {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--muted);
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+
+        .vec-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            color: var(--muted);
+            text-align: left;
+            min-width: 60px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+
+            .container,
+            .hero,
+            .toc {
+                padding: 24px 20px;
+            }
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div style="width: 100%; max-width: 1100px; padding: 0 48px;">
+            <div class="hero-tag">CampusX · LangChain Series · Video 12</div>
+            <h1>Vector Stores<br>in LangChain</h1>
+            <p>Complete notes covering why vector stores exist, how embeddings work, key features, Chroma DB, and
+                hands-on
+                code with CRUD operations.</p>
+            <div class="hero-meta">
+                <span class="meta-pill">35 Topics</span>
+                <span class="meta-pill">6 Sections</span>
+                <span class="meta-pill">LangChain + Chroma</span>
+                <span class="meta-pill">Python Code</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAV -->
+    <nav class="toc">
+        <a href="#s1">Why Vector Stores</a>
+        <a href="#s2">What are Vector Stores</a>
+        <a href="#s3">VS vs VDB</a>
+        <a href="#s4">LangChain API</a>
+        <a href="#s5">Chroma DB</a>
+        <a href="#s6">Code</a>
+    </nav>
+
+    <div class="container">
+
+        <!-- ===================== SECTION 1 ===================== -->
+        <div class="section" id="s1">
+            <div class="section-header">
+                <span class="section-num">01</span>
+                <h2>Why Vector Stores?</h2>
+            </div>
+
+            <!-- Problem -->
+            <div class="card">
+                <h3>The Problem with Keyword Search</h3>
+                <p>Traditional databases use <strong>keyword matching</strong> — they search for exact words. If you
+                    search "emotional drama film", it won't find a movie described as "a heart-wrenching story about
+                    family bonds" — even though the meaning is the same.</p>
+            </div>
+
+            <!-- Diagram: Keyword vs Semantic -->
+            <div class="diagram-wrap">
+                <div class="diagram-title">Keyword Match vs Semantic Search</div>
+                <svg width="100%" viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L8,3 z" fill="#4f9eff" />
+                        </marker>
+                        <marker id="arrow-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L8,3 z" fill="#ff6b6b" />
+                        </marker>
+                        <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L8,3 z" fill="#56d99e" />
+                        </marker>
+                    </defs>
+                    <!-- LEFT: Keyword -->
+                    <rect x="10" y="20" width="180" height="50" rx="8" fill="rgba(79,158,255,0.1)"
+                        stroke="rgba(79,158,255,0.4)" stroke-width="1.5" />
+                    <text x="100" y="41" text-anchor="middle" fill="#4f9eff" font-family="JetBrains Mono"
+                        font-size="11">Query</text>
+                    <text x="100" y="58" text-anchor="middle" fill="#212529" font-family="Syne" font-size="12"
+                        font-weight="700">"comedy movie"</text>
+
+                    <line x1="200" y1="45" x2="250" y2="45" stroke="#4f9eff" stroke-width="1.5"
+                        marker-end="url(#arrow)" />
+                    <text x="225" y="38" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono"
+                        font-size="10">match</text>
+
+                    <rect x="260" y="10" width="180" height="70" rx="8" fill="#ffffff" stroke="#dee2e6"
+                        stroke-width="1.5" />
+                    <text x="350" y="30" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono"
+                        font-size="10">Database Row</text>
+                    <text x="350" y="48" text-anchor="middle" fill="#56d99e" font-family="Syne" font-size="12">✓
+                        "comedy" film</text>
+                    <text x="350" y="66" text-anchor="middle" fill="#ff6b6b" font-family="Syne" font-size="12">✗
+                        "hilarious" film</text>
+
+                    <!-- separator -->
+                    <line x1="460" y1="0" x2="460" y2="200" stroke="#2a3348" stroke-width="1" stroke-dasharray="4" />
+
+                    <!-- RIGHT: Semantic -->
+                    <rect x="480" y="20" width="180" height="50" rx="8" fill="rgba(86,217,158,0.1)"
+                        stroke="rgba(86,217,158,0.4)" stroke-width="1.5" />
+                    <text x="570" y="41" text-anchor="middle" fill="#56d99e" font-family="JetBrains Mono"
+                        font-size="11">Query Vector</text>
+                    <text x="570" y="58" text-anchor="middle" fill="#212529" font-family="Syne" font-size="12"
+                        font-weight="700">[0.32, 0.65 ...]</text>
+
+                    <text x="100" y="130" text-anchor="middle" fill="#ff6b6b" font-family="Syne" font-size="13"
+                        font-weight="700">Keyword — Fails on synonyms</text>
+                    <text x="570" y="130" text-anchor="middle" fill="#56d99e" font-family="Syne" font-size="13"
+                        font-weight="700">Semantic — Understands meaning</text>
+
+                    <text x="100" y="160" text-anchor="middle" fill="#8892a4" font-family="Lora" font-size="12">Exact
+                        word match only</text>
+                    <text x="570" y="160" text-anchor="middle" fill="#8892a4" font-family="Lora" font-size="12">Compares
+                        by similarity score</text>
+                </svg>
+            </div>
+
+            <!-- Embeddings -->
+            <div class="card">
+                <h3>Solution: Embeddings</h3>
+                <p>Text is converted into a <strong>numerical vector</strong> using a neural network (embedding model).
+                    Similar texts produce vectors that are <em>close to each other</em> in vector space — this enables
+                    meaning-based search.</p>
+            </div>
+
+            <!-- Embedding Diagram -->
+            <div class="diagram-wrap">
+                <div class="diagram-title">Text → Embedding Pipeline</div>
+                <svg width="100%" viewBox="0 0 800 160" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Step 1: Text -->
+                    <rect x="10" y="50" width="140" height="60" rx="8" fill="rgba(79,158,255,0.1)"
+                        stroke="rgba(79,158,255,0.4)" stroke-width="1.5" />
+                    <text x="80" y="75" text-anchor="middle" fill="#4f9eff" font-family="JetBrains Mono"
+                        font-size="10">Movie Plot</text>
+                    <text x="80" y="95" text-anchor="middle" fill="#212529" font-family="Lora" font-size="11">"A boy
+                        finds magic..."</text>
+
+                    <!-- Arrow 1 -->
+                    <line x1="155" y1="80" x2="200" y2="80" stroke="#4f9eff" stroke-width="1.5"
+                        marker-end="url(#arrow)" />
+
+                    <!-- Step 2: NN -->
+                    <rect x="210" y="30" width="130" height="100" rx="8" fill="rgba(255,179,71,0.1)"
+                        stroke="rgba(255,179,71,0.4)" stroke-width="1.5" />
+                    <text x="275" y="55" text-anchor="middle" fill="#ffb347" font-family="JetBrains Mono"
+                        font-size="10">Neural Network</text>
+                    <!-- simple NN dots -->
+                    <circle cx="240" cy="80" r="6" fill="#ff7b72" opacity="0.7" />
+                    <circle cx="240" cy="100" r="6" fill="#ff7b72" opacity="0.7" />
+                    <circle cx="275" cy="70" r="6" fill="#ffb347" opacity="0.7" />
+                    <circle cx="275" cy="90" r="6" fill="#ffb347" opacity="0.7" />
+                    <circle cx="275" cy="110" r="6" fill="#ffb347" opacity="0.7" />
+                    <circle cx="310" cy="90" r="7" fill="#4f9eff" opacity="0.9" />
+                    <line x1="246" y1="80" x2="269" y2="70" stroke="#4a5568" stroke-width="0.8" />
+                    <line x1="246" y1="80" x2="269" y2="90" stroke="#4a5568" stroke-width="0.8" />
+                    <line x1="246" y1="80" x2="269" y2="110" stroke="#4a5568" stroke-width="0.8" />
+                    <line x1="246" y1="100" x2="269" y2="70" stroke="#4a5568" stroke-width="0.8" />
+                    <line x1="246" y1="100" x2="269" y2="90" stroke="#4a5568" stroke-width="0.8" />
+                    <line x1="246" y1="100" x2="269" y2="110" stroke="#4a5568" stroke-width="0.8" />
+                    <line x1="281" y1="70" x2="303" y2="90" stroke="#4a5568" stroke-width="0.8" />
+                    <line x1="281" y1="90" x2="303" y2="90" stroke="#4a5568" stroke-width="0.8" />
+                    <line x1="281" y1="110" x2="303" y2="90" stroke="#4a5568" stroke-width="0.8" />
+
+                    <!-- Arrow 2 -->
+                    <line x1="345" y1="80" x2="390" y2="80" stroke="#4f9eff" stroke-width="1.5"
+                        marker-end="url(#arrow)" />
+
+                    <!-- Step 3: Vector -->
+                    <text x="430" y="50" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono"
+                        font-size="10">512-dim Vector</text>
+                    <rect x="390" y="60" width="52" height="38" rx="5" fill="rgba(255,179,71,0.15)"
+                        stroke="rgba(255,179,71,0.35)" stroke-width="1.5" />
+                    <text x="416" y="84" text-anchor="middle" fill="#ffb347" font-family="JetBrains Mono"
+                        font-size="12">0.32</text>
+                    <rect x="445" y="60" width="52" height="38" rx="5" fill="rgba(255,179,71,0.15)"
+                        stroke="rgba(255,179,71,0.35)" stroke-width="1.5" />
+                    <text x="471" y="84" text-anchor="middle" fill="#ffb347" font-family="JetBrains Mono"
+                        font-size="12">0.63</text>
+                    <rect x="500" y="60" width="52" height="38" rx="5" fill="rgba(255,179,71,0.15)"
+                        stroke="rgba(255,179,71,0.35)" stroke-width="1.5" />
+                    <text x="526" y="84" text-anchor="middle" fill="#ffb347" font-family="JetBrains Mono"
+                        font-size="12">0.13</text>
+                    <text x="575" y="84" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono"
+                        font-size="18">···</text>
+                    <rect x="600" y="60" width="52" height="38" rx="5" fill="rgba(255,179,71,0.15)"
+                        stroke="rgba(255,179,71,0.35)" stroke-width="1.5" />
+                    <text x="626" y="84" text-anchor="middle" fill="#ffb347" font-family="JetBrains Mono"
+                        font-size="12">0.99</text>
+
+                    <!-- labels -->
+                    <text x="80" y="140" text-anchor="middle" fill="#8892a4" font-family="Syne"
+                        font-size="11">Input</text>
+                    <text x="275" y="140" text-anchor="middle" fill="#8892a4" font-family="Syne"
+                        font-size="11">Embedding Model</text>
+                    <text x="510" y="140" text-anchor="middle" fill="#8892a4" font-family="Syne" font-size="11">Output:
+                        Float Array</text>
+                </svg>
+            </div>
+
+            <div class="info-box">
+                <strong>Key Insight:</strong> Each movie gets converted into a 512-dimensional (or higher) vector.
+                Movies with similar plots have vectors that are <em>close together</em> in this high-dimensional space.
+                Similarity is measured using <strong>cosine similarity</strong>.
+            </div>
+
+            <!-- Cosine similarity diagram -->
+            <div class="diagram-wrap">
+                <div class="diagram-title">Cosine Similarity — Similar Movies are Close in Vector Space</div>
+                <svg width="100%" viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Axes -->
+                    <line x1="60" y1="220" x2="420" y2="220" stroke="#2a3348" stroke-width="1.5" />
+                    <line x1="60" y1="220" x2="60" y2="20" stroke="#2a3348" stroke-width="1.5" />
+                    <text x="425" y="224" fill="#4a5568" font-family="JetBrains Mono" font-size="11">→</text>
+                    <text x="55" y="18" fill="#4a5568" font-family="JetBrains Mono" font-size="11">↑</text>
+
+                    <!-- Vectors -->
+                    <!-- m1 -->
+                    <line x1="60" y1="220" x2="200" y2="60" stroke="#4f9eff" stroke-width="2"
+                        marker-end="url(#arrow)" />
+                    <text x="205" y="58" fill="#4f9eff" font-family="Syne" font-size="12" font-weight="700">m1 (3
+                        Idiots)</text>
+                    <!-- m2 -->
+                    <line x1="60" y1="220" x2="230" y2="80" stroke="#56d99e" stroke-width="2"
+                        marker-end="url(#arrow)" />
+                    <text x="235" y="78" fill="#56d99e" font-family="Syne" font-size="12" font-weight="700">m2
+                        (TZP)</text>
+                    <!-- m3 -->
+                    <line x1="60" y1="220" x2="350" y2="100" stroke="#8892a4" stroke-width="1.5"
+                        marker-end="url(#arrow)" />
+                    <text x="355" y="98" fill="#8892a4" font-family="Syne" font-size="12">m3 (Stree)</text>
+                    <!-- m4 -->
+                    <line x1="60" y1="220" x2="370" y2="120" stroke="#ff6b6b" stroke-width="1.5"
+                        marker-end="url(#arrow)" />
+                    <text x="375" y="118" fill="#ff6b6b" font-family="Syne" font-size="12">m4 (similar)</text>
+
+                    <!-- Angle arc for m1, m2 -->
+                    <path d="M 100 176 Q 115 155 130 165" stroke="#4f9eff" fill="none" stroke-width="1"
+                        stroke-dasharray="3" />
+                    <text x="112" y="175" fill="#4f9eff" font-family="JetBrains Mono" font-size="10">small θ</text>
+
+                    <!-- Legend -->
+                    <text x="60" y="250" fill="#8892a4" font-family="Lora" font-size="12" font-style="italic">Smaller
+                        angle = higher similarity</text>
+                </svg>
+            </div>
+
+            <div class="info-box green">
+                <strong>Three Capabilities a Vector Store Must Have:</strong><br>
+                C1 → Generate &amp; store embedding vectors &nbsp;|&nbsp; C2 → Storage &nbsp;|&nbsp; C3 → Semantic
+                search intelligence
+            </div>
+        </div>
+
+        <!-- ===================== SECTION 2 ===================== -->
+        <div class="section" id="s2">
+            <div class="section-header">
+                <span class="section-num">02</span>
+                <h2>What are Vector Stores?</h2>
+            </div>
+
+            <div class="info-box">
+                <strong>Definition:</strong> A vector store is a system designed to <em>store and retrieve data
+                    represented as numerical vectors</em>.
+            </div>
+
+            <!-- 4 Key Features -->
+            <div style="margin-top: 20px; margin-bottom: 8px;">
+                <span style="font-family: Syne, sans-serif; font-weight: 700; color: var(--text);">Key Features</span>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3>① Storage</h3>
+                    <p>Stores vectors and associated metadata. Supports two modes:</p>
+                    <div style="margin-top:10px; display:flex; gap:10px;">
+                        <div
+                            style="flex:1; background: rgba(79,158,255,0.08); border:1px solid rgba(79,158,255,0.25); border-radius:8px; padding:10px; text-align:center;">
+                            <div
+                                style="font-family: Syne, sans-serif; font-weight:700; color: var(--accent); font-size:13px;">
+                                In-Memory</div>
+                            <div style="font-size:12px; color:var(--muted); margin-top:4px;">Fast · RAM · Temporary
+                            </div>
+                        </div>
+                        <div
+                            style="flex:1; background: rgba(86,217,158,0.08); border:1px solid rgba(86,217,158,0.25); border-radius:8px; padding:10px; text-align:center;">
+                            <div
+                                style="font-family: Syne, sans-serif; font-weight:700; color: var(--accent3); font-size:13px;">
+                                On-Disk</div>
+                            <div style="font-size:12px; color:var(--muted); margin-top:4px;">Durable · HDD/SSD ·
+                                Persistent</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>② Similarity Search</h3>
+                    <p>Retrieves vectors most similar to a <strong>query vector</strong> using distance metrics like
+                        cosine similarity or Euclidean distance. Returns top-k most relevant results.</p>
+                </div>
+                <div class="card">
+                    <h3>③ Indexing</h3>
+                    <p>Builds special data structures for <strong>fast approximate nearest neighbor (ANN)</strong>
+                        lookups on high-dimensional vectors.</p>
+                    <div class="info-box" style="margin-top:12px;">
+                        <strong>How Indexing Works:</strong> Clusters the 10 lakh vectors into groups (e.g., 10
+                        clusters). At query time, only the relevant cluster(s) are searched — O(n) becomes much faster.
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>④ CRUD Operations</h3>
+                    <p>Full lifecycle management of vectors:</p>
+                    <ul class="feature-list" style="margin-top:8px;">
+                        <li><strong>Create</strong> — add new vectors</li>
+                        <li><strong>Read</strong> — retrieve vectors</li>
+                        <li><strong>Update</strong> — modify existing entries</li>
+                        <li><strong>Delete</strong> — remove outdated vectors</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Indexing Diagram -->
+            <div class="diagram-wrap">
+                <div class="diagram-title">Indexing via Clustering — Faster Search</div>
+                <svg width="100%" viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Title labels -->
+                    <text x="120" y="20" text-anchor="middle" fill="#8892a4" font-family="Syne" font-size="12"
+                        font-weight="600">10 Lakh Vectors</text>
+                    <text x="420" y="20" text-anchor="middle" fill="#8892a4" font-family="Syne" font-size="12"
+                        font-weight="600">10 Clusters (with centroids)</text>
+
+                    <!-- Scatter dots left -->
+                    <circle cx="60" cy="80" r="4" fill="#4f9eff" opacity="0.6" />
+                    <circle cx="80" cy="60" r="4" fill="#4f9eff" opacity="0.6" />
+                    <circle cx="100" cy="90" r="4" fill="#ff6b6b" opacity="0.6" />
+                    <circle cx="75" cy="120" r="4" fill="#56d99e" opacity="0.6" />
+                    <circle cx="140" cy="70" r="4" fill="#4f9eff" opacity="0.6" />
+                    <circle cx="160" cy="100" r="4" fill="#ff6b6b" opacity="0.6" />
+                    <circle cx="130" cy="140" r="4" fill="#56d99e" opacity="0.6" />
+                    <circle cx="90" cy="150" r="4" fill="#4f9eff" opacity="0.6" />
+                    <circle cx="165" cy="50" r="4" fill="#ffb347" opacity="0.6" />
+                    <circle cx="50" cy="110" r="4" fill="#ffb347" opacity="0.6" />
+                    <circle cx="110" cy="55" r="4" fill="#56d99e" opacity="0.6" />
+                    <circle cx="150" cy="160" r="4" fill="#4f9eff" opacity="0.6" />
+
+                    <!-- Arrow -->
+                    <line x1="210" y1="100" x2="280" y2="100" stroke="#4f9eff" stroke-width="2"
+                        marker-end="url(#arrow)" />
+                    <text x="245" y="92" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono"
+                        font-size="10">cluster</text>
+
+                    <!-- Clusters right -->
+                    <circle cx="340" cy="75" r="28" fill="none" stroke="rgba(79,158,255,0.4)" stroke-width="1.5"
+                        stroke-dasharray="4" />
+                    <circle cx="340" cy="75" r="5" fill="#4f9eff" />
+                    <circle cx="328" cy="65" r="3" fill="#4f9eff" opacity="0.5" />
+                    <circle cx="352" cy="80" r="3" fill="#4f9eff" opacity="0.5" />
+                    <circle cx="335" cy="90" r="3" fill="#4f9eff" opacity="0.5" />
+                    <text x="340" y="120" text-anchor="middle" fill="#4f9eff" font-family="JetBrains Mono"
+                        font-size="10">C1</text>
+
+                    <circle cx="430" cy="90" r="30" fill="none" stroke="rgba(255,107,107,0.4)" stroke-width="1.5"
+                        stroke-dasharray="4" />
+                    <circle cx="430" cy="90" r="5" fill="#ff6b6b" />
+                    <circle cx="418" cy="78" r="3" fill="#ff6b6b" opacity="0.5" />
+                    <circle cx="443" cy="95" r="3" fill="#ff6b6b" opacity="0.5" />
+                    <text x="430" y="136" text-anchor="middle" fill="#ff6b6b" font-family="JetBrains Mono"
+                        font-size="10">C2</text>
+
+                    <circle cx="510" cy="70" r="25" fill="none" stroke="rgba(86,217,158,0.4)" stroke-width="1.5"
+                        stroke-dasharray="4" />
+                    <circle cx="510" cy="70" r="5" fill="#56d99e" />
+                    <text x="510" y="110" text-anchor="middle" fill="#56d99e" font-family="JetBrains Mono"
+                        font-size="10">C3</text>
+
+                    <!-- Legend box -->
+                    <rect x="580" y="50" width="100" height="80" rx="6" fill="#ffffff" stroke="#dee2e6"
+                        stroke-width="1" />
+                    <text x="630" y="68" text-anchor="middle" fill="#8892a4" font-family="Syne" font-size="10"
+                        font-weight="700">Centroid</text>
+                    <text x="630" y="84" text-anchor="middle" fill="#212529" font-family="JetBrains Mono"
+                        font-size="10">= avg vector</text>
+                    <text x="630" y="100" text-anchor="middle" fill="#212529" font-family="JetBrains Mono"
+                        font-size="10">of cluster</text>
+                    <text x="630" y="120" text-anchor="middle" fill="#ffb347" font-family="Syne" font-size="10">Stored
+                        separately</text>
+
+                    <text x="400" y="190" text-anchor="middle" fill="#8892a4" font-family="Lora" font-size="12"
+                        font-style="italic">Query → find nearest centroid → search only that cluster</text>
+                </svg>
+            </div>
+
+            <!-- Use Cases -->
+            <div style="margin-top: 28px; margin-bottom: 8px;">
+                <span style="font-family: Syne, sans-serif; font-weight: 700; color: var(--text);">Use-Cases</span>
+            </div>
+            <div class="grid-2">
+                <div class="card" style="border-color: rgba(79,158,255,0.3);">
+                    <h3>Semantic Search</h3>
+                    <p>Find documents by <em>meaning</em>, not just keywords. Powers intelligent Q&amp;A systems.</p>
+                </div>
+                <div class="card" style="border-color: rgba(86,217,158,0.3);">
+                    <h3>RAG (Retrieval Augmented Generation)</h3>
+                    <p>Retrieve relevant context chunks from a knowledge base to ground LLM responses in facts.</p>
+                </div>
+                <div class="card" style="border-color: rgba(255,179,71,0.3);">
+                    <h3>Recommender Systems</h3>
+                    <p>Find items similar to what a user likes — movies, products, articles.</p>
+                </div>
+                <div class="card" style="border-color: rgba(255,107,107,0.3);">
+                    <h3>Image / Multimedia Search</h3>
+                    <p>Convert images/audio into embeddings and search by similarity across media.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== SECTION 3 ===================== -->
+        <div class="section" id="s3">
+            <div class="section-header">
+                <span class="section-num">03</span>
+                <h2>Vector Store vs Vector Database</h2>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Vector Store</th>
+                        <th>Vector Database</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Definition</strong></td>
+                        <td>Lightweight library/service for storing vectors &amp; similarity search</td>
+                        <td>Full-fledged DB with vector + database features</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Transactions</strong></td>
+                        <td>Not included</td>
+                        <td>ACID transactions supported</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scaling</strong></td>
+                        <td>Manual, separate</td>
+                        <td>Distributed architecture, horizontal scaling</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Persistence</strong></td>
+                        <td>Handle separately</td>
+                        <td>Built-in backup &amp; replication</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Security</strong></td>
+                        <td>Minimal</td>
+                        <td>Auth/authorization, role-based access</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Best for</strong></td>
+                        <td>Prototyping, small-scale apps</td>
+                        <td>Production, large datasets</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Examples</strong></td>
+                        <td><span class="badge badge-blue">FAISS</span><span class="badge badge-blue">Chroma</span></td>
+                        <td><span class="badge badge-green">Pinecone</span><span
+                                class="badge badge-green">Milvus</span><span
+                                class="badge badge-green">Qdrant</span><span class="badge badge-green">Weaviate</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box orange" style="margin-top:16px;">
+                <strong>Summary:</strong> A vector database is effectively a vector store <em>with extra database
+                    features</em> (clustering, scaling, security, metadata filtering, durability). Vector DB ⊃ Vector
+                Store.
+            </div>
+        </div>
+
+        <!-- ===================== SECTION 4 ===================== -->
+        <div class="section" id="s4">
+            <div class="section-header">
+                <span class="section-num">04</span>
+                <h2>Vector Stores in LangChain</h2>
+            </div>
+
+            <div class="grid-3">
+                <div class="card">
+                    <h3>Supported Stores</h3>
+                    <p>LangChain integrates with FAISS, Pinecone, Chroma, Qdrant, Weaviate, and more — giving
+                        flexibility in scale &amp; deployment.</p>
+                </div>
+                <div class="card">
+                    <h3>Common Interface</h3>
+                    <p>A uniform Vector Store API lets you swap backends (e.g., FAISS → Pinecone) with <strong>minimal
+                            code changes</strong>.</p>
+                </div>
+                <div class="card">
+                    <h3>Metadata Handling</h3>
+                    <p>Attach metadata (timestamps, authors, tags) to each document — enables <strong>filter-based
+                            retrieval</strong>.</p>
+                </div>
+            </div>
+
+            <!-- Common API -->
+            <div style="margin-top: 20px; margin-bottom: 8px;">
+                <span style="font-family: Syne, sans-serif; font-weight: 700; color: var(--text);">Common API
+                    Methods</span>
+            </div>
+            <div class="code-block">
+                <div class="code-header">
+                    <span>LangChain Vector Store Interface</span>
+                    <span class="lang-badge">Python</span>
+                </div>
+                <pre><span class="cm"># Create vector store from documents</span>
+vs = VectorStore.<span class="fn">from_documents</span>(<span class="var">docs</span>, <span class="var">embedding</span>)
+<span class="cm"># OR from raw texts</span>
+vs = VectorStore.<span class="fn">from_texts</span>(<span class="var">texts</span>, <span class="var">embedding</span>)
+
+<span class="cm"># Add more documents</span>
+vs.<span class="fn">add_documents</span>(<span class="var">docs</span>)
+
+<span class="cm"># Similarity search — returns top k Documents</span>
+results = vs.<span class="fn">similarity_search</span>(<span class="var">query</span>, k=<span class="num">4</span>)
+
+<span class="cm"># Similarity search with scores</span>
+results = vs.<span class="fn">similarity_search_with_score</span>(<span class="var">query</span>, k=<span class="num">4</span>)
+
+<span class="cm"># Metadata filtering</span>
+results = vs.<span class="fn">similarity_search_with_score</span>(
+    <span class="var">query</span>=<span class="str">""</span>,
+    filter={<span class="str">"team"</span>: <span class="str">"Mumbai Indians"</span>}
+)</pre>
+            </div>
+
+            <!-- Swap diagram -->
+            <div class="diagram-wrap">
+                <div class="diagram-title">Swap Backends with Same Code</div>
+                <svg width="100%" viewBox="0 0 500 120" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="170" y="35" width="120" height="50" rx="8" fill="rgba(79,158,255,0.1)"
+                        stroke="rgba(79,158,255,0.4)" stroke-width="1.5" />
+                    <text x="230" y="57" text-anchor="middle" fill="#4f9eff" font-family="Syne" font-size="13"
+                        font-weight="700">VS Interface</text>
+                    <text x="230" y="74" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono"
+                        font-size="10">(LangChain)</text>
+
+                    <line x1="295" y1="45" x2="340" y2="30" stroke="#4f9eff" stroke-width="1.5"
+                        marker-end="url(#arrow)" />
+                    <line x1="295" y1="75" x2="340" y2="90" stroke="#56d99e" stroke-width="1.5"
+                        marker-end="url(#arrow)" />
+
+                    <rect x="345" y="16" width="90" height="30" rx="6" fill="rgba(255,107,107,0.12)"
+                        stroke="rgba(255,107,107,0.35)" stroke-width="1.5" />
+                    <text x="390" y="34" text-anchor="middle" fill="#ff6b6b" font-family="Syne" font-size="12"
+                        font-weight="700">FAISS ✗</text>
+
+                    <rect x="345" y="76" width="90" height="30" rx="6" fill="rgba(86,217,158,0.12)"
+                        stroke="rgba(86,217,158,0.35)" stroke-width="1.5" />
+                    <text x="390" y="94" text-anchor="middle" fill="#56d99e" font-family="Syne" font-size="12"
+                        font-weight="700">Pinecone ✓</text>
+
+                    <text x="230" y="110" text-anchor="middle" fill="#8892a4" font-family="Lora" font-size="11"
+                        font-style="italic">Change 1 line → switch backend</text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- ===================== SECTION 5 ===================== -->
+        <div class="section" id="s5">
+            <div class="section-header">
+                <span class="section-num">05</span>
+                <h2>Chroma Vector Store</h2>
+            </div>
+
+            <div class="info-box green">
+                <strong>Chroma</strong> is a lightweight, open-source vector database especially friendly for <em>local
+                    development</em> and small- to medium-scale production needs.
+            </div>
+
+            <!-- Hierarchy Diagram -->
+            <div class="diagram-wrap">
+                <div class="diagram-title">Chroma DB Hierarchy</div>
+                <svg width="100%" viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Tenant -->
+                    <rect x="220" y="10" width="160" height="44" rx="8" fill="rgba(255,179,71,0.15)"
+                        stroke="rgba(255,179,71,0.4)" stroke-width="1.5" />
+                    <text x="300" y="37" text-anchor="middle" fill="#ffb347" font-family="Syne" font-size="14"
+                        font-weight="700">Tenant</text>
+
+                    <line x1="260" y1="54" x2="200" y2="90" stroke="#2a3348" stroke-width="1.5" />
+                    <line x1="340" y1="54" x2="400" y2="90" stroke="#2a3348" stroke-width="1.5" />
+
+                    <!-- Databases -->
+                    <rect x="130" y="90" width="140" height="40" rx="8" fill="rgba(79,158,255,0.12)"
+                        stroke="rgba(79,158,255,0.4)" stroke-width="1.5" />
+                    <text x="200" y="115" text-anchor="middle" fill="#4f9eff" font-family="Syne" font-size="13"
+                        font-weight="600">Database</text>
+
+                    <rect x="330" y="90" width="140" height="40" rx="8" fill="rgba(79,158,255,0.12)"
+                        stroke="rgba(79,158,255,0.4)" stroke-width="1.5" />
+                    <text x="400" y="115" text-anchor="middle" fill="#4f9eff" font-family="Syne" font-size="13"
+                        font-weight="600">Database</text>
+
+                    <!-- Lines to collections -->
+                    <line x1="165" y1="130" x2="130" y2="165" stroke="#2a3348" stroke-width="1.5" />
+                    <line x1="200" y1="130" x2="200" y2="165" stroke="#2a3348" stroke-width="1.5" />
+                    <line x1="365" y1="130" x2="340" y2="165" stroke="#2a3348" stroke-width="1.5" />
+                    <line x1="400" y1="130" x2="400" y2="165" stroke="#2a3348" stroke-width="1.5" />
+                    <line x1="435" y1="130" x2="460" y2="165" stroke="#2a3348" stroke-width="1.5" />
+
+                    <!-- Collections -->
+                    <rect x="80" y="165" width="100" height="34" rx="6" fill="rgba(86,217,158,0.1)"
+                        stroke="rgba(86,217,158,0.35)" stroke-width="1.5" />
+                    <text x="130" y="186" text-anchor="middle" fill="#56d99e" font-family="Syne" font-size="11"
+                        font-weight="600">Collection</text>
+                    <rect x="160" y="165" width="100" height="34" rx="6" fill="rgba(86,217,158,0.1)"
+                        stroke="rgba(86,217,158,0.35)" stroke-width="1.5" />
+                    <text x="210" y="186" text-anchor="middle" fill="#56d99e" font-family="Syne" font-size="11"
+                        font-weight="600">Collection</text>
+                    <rect x="290" y="165" width="100" height="34" rx="6" fill="rgba(86,217,158,0.1)"
+                        stroke="rgba(86,217,158,0.35)" stroke-width="1.5" />
+                    <text x="340" y="186" text-anchor="middle" fill="#56d99e" font-family="Syne" font-size="11"
+                        font-weight="600">Collection</text>
+                    <rect x="370" y="165" width="100" height="34" rx="6" fill="rgba(86,217,158,0.1)"
+                        stroke="rgba(86,217,158,0.35)" stroke-width="1.5" />
+                    <text x="420" y="186" text-anchor="middle" fill="#56d99e" font-family="Syne" font-size="11"
+                        font-weight="600">Collection</text>
+
+                    <!-- Docs -->
+                    <line x1="130" y1="199" x2="115" y2="225" stroke="#2a3348" stroke-width="1" />
+                    <line x1="130" y1="199" x2="145" y2="225" stroke="#2a3348" stroke-width="1" />
+                    <rect x="95" y="225" width="40" height="24" rx="4" fill="var(--bg3)" stroke="#2a3348"
+                        stroke-width="1" />
+                    <text x="115" y="240" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono"
+                        font-size="10">Doc</text>
+                    <rect x="130" y="225" width="40" height="24" rx="4" fill="var(--bg3)" stroke="#2a3348"
+                        stroke-width="1" />
+                    <text x="150" y="240" text-anchor="middle" fill="#8892a4" font-family="JetBrains Mono"
+                        font-size="10">Doc</text>
+                </svg>
+            </div>
+
+            <div class="card">
+                <h3>Persistent Storage</h3>
+                <p>Chroma persists data as a <code
+                        style="background:var(--bg3); padding:2px 6px; border-radius:4px; color: var(--accent4);">chroma.sqlite3</code>
+                    file in the specified <code
+                        style="background:var(--bg3); padding:2px 6px; border-radius:4px; color: var(--accent4);">persist_directory</code>.
+                    Data survives session restarts — no need to re-embed documents every time.</p>
+            </div>
+        </div>
+
+        <!-- ===================== SECTION 6 ===================== -->
+        <div class="section" id="s6">
+            <div class="section-header">
+                <span class="section-num">06</span>
+                <h2>Code Implementation</h2>
+            </div>
+
+            <!-- Steps -->
+            <div class="steps">
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h4>Imports</h4>
+                        <p>Import necessary classes from LangChain.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span>imports</span><span class="lang-badge">Python</span></div>
+                            <pre><span class="kw">from</span> langchain_openai <span class="kw">import</span> <span class="fn">OpenAIEmbeddings</span>
+<span class="kw">from</span> langchain.vectorstores <span class="kw">import</span> <span class="fn">Chroma</span>
+<span class="kw">from</span> langchain.schema <span class="kw">import</span> <span class="fn">Document</span></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h4>Create Documents with Metadata</h4>
+                        <p>Each Document has <code>page_content</code> (the text) and <code>metadata</code> (a dict for
+                            filtering).</p>
+                        <div class="code-block">
+                            <div class="code-header"><span>create documents — IPL players example</span><span
+                                    class="lang-badge">Python</span></div>
+                            <pre>doc1 = <span class="fn">Document</span>(
+    page_content=<span class="str">"Virat Kohli is one of the most successful batsmen in IPL history..."</span>,
+    metadata={<span class="str">"team"</span>: <span class="str">"Royal Challengers Bangalore"</span>}
+)
+doc2 = <span class="fn">Document</span>(
+    page_content=<span class="str">"Rohit Sharma is the most successful captain in IPL..."</span>,
+    metadata={<span class="str">"team"</span>: <span class="str">"Mumbai Indians"</span>}
+)
+doc3 = <span class="fn">Document</span>(
+    page_content=<span class="str">"MS Dhoni, famously known as Captain Cool..."</span>,
+    metadata={<span class="str">"team"</span>: <span class="str">"Chennai Super Kings"</span>}
+)
+<span class="cm"># ... more documents ...</span>
+
+docs = [doc1, doc2, doc3, doc4, doc5]</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h4>Initialize Chroma Vector Store</h4>
+                        <p>Create a Chroma instance with embedding function, a persistence directory (for saving to
+                            disk), and a collection name.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span>initialize chroma</span><span
+                                    class="lang-badge">Python</span></div>
+                            <pre>vector_store = <span class="fn">Chroma</span>(
+    embedding_function=<span class="fn">OpenAIEmbeddings</span>(),
+    persist_directory=<span class="str">'my_chroma_db'</span>,  <span class="cm"># saves as SQLite file</span>
+    collection_name=<span class="str">'sample'</span>
+)</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <h4>Add Documents</h4>
+                        <p>Embed and store all documents. Returns a list of auto-generated UUIDs for each document.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span>add documents</span><span class="lang-badge">Python</span>
+                            </div>
+                            <pre>ids = vector_store.<span class="fn">add_documents</span>(docs)
+<span class="cm"># Returns: ['58826e54-50a9-...', '44eadef9-b194-...', ...]</span></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">5</div>
+                    <div class="step-content">
+                        <h4>View Stored Documents</h4>
+                        <p>Inspect what's stored — embeddings, documents, and metadata.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span>view all documents</span><span
+                                    class="lang-badge">Python</span></div>
+                            <pre>vector_store.<span class="fn">get</span>(include=[<span class="str">'embeddings'</span>, <span class="str">'documents'</span>, <span class="str">'metadatas'</span>])
+<span class="cm"># Returns dict with: ids, documents, metadatas, embeddings</span></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">6</div>
+                    <div class="step-content">
+                        <h4>Similarity Search</h4>
+                        <p>Query the vector store. Returns top-k most similar Documents.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span>similarity search</span><span
+                                    class="lang-badge">Python</span></div>
+                            <pre>results = vector_store.<span class="fn">similarity_search</span>(
+    query=<span class="str">'Who among these are a bowler?'</span>,
+    k=<span class="num">2</span>
+)
+<span class="cm"># Returns: [Document(metadata={'team': 'Mumbai Indians'}, page_content='Jasprit Bumrah...'),</span>
+<span class="cm">#           Document(metadata={'team': 'Chennai Super Kings'}, page_content='Ravindra Jadeja...')]</span></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">7</div>
+                    <div class="step-content">
+                        <h4>Similarity Search with Score</h4>
+                        <p>Same as above but also returns a <strong>distance score</strong> (lower = more similar in L2
+                            distance).</p>
+                        <div class="code-block">
+                            <div class="code-header"><span>similarity search with score</span><span
+                                    class="lang-badge">Python</span></div>
+                            <pre>results = vector_store.<span class="fn">similarity_search_with_score</span>(
+    query=<span class="str">'Who among these are a bowler?'</span>,
+    k=<span class="num">2</span>
+)
+<span class="cm"># Returns: [(Document(...Bumrah...), 0.354),</span>
+<span class="cm">#           (Document(...Jadeja...), 0.408)]</span></pre>
+                        </div>
+                        <div class="info-box" style="margin-top:10px;">
+                            <strong>Note:</strong> Chroma uses L2 (Euclidean) distance by default. <em>Lower score =
+                                more similar.</em>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">8</div>
+                    <div class="step-content">
+                        <h4>Metadata Filtering</h4>
+                        <p>Filter results to a specific metadata value before running similarity search.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span>metadata filter</span><span class="lang-badge">Python</span>
+                            </div>
+                            <pre>results = vector_store.<span class="fn">similarity_search_with_score</span>(
+    query=<span class="str">""</span>,
+    filter={<span class="str">"team"</span>: <span class="str">"Chennai Super Kings"</span>}
+)
+<span class="cm"># Only returns documents where team == "Chennai Super Kings"</span>
+<span class="cm"># Result: MS Dhoni (0.648), Ravindra Jadeja (0.656)</span></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">9</div>
+                    <div class="step-content">
+                        <h4>Update Documents</h4>
+                        <p>Update a document by its UUID (obtained when adding documents).</p>
+                        <div class="code-block">
+                            <div class="code-header"><span>update document</span><span class="lang-badge">Python</span>
+                            </div>
+                            <pre>updated_doc1 = <span class="fn">Document</span>(
+    page_content=<span class="str">"Virat Kohli, the former captain of RCB, is renowned..."</span>,
+    metadata={<span class="str">"team"</span>: <span class="str">"Royal Challengers Bangalore"</span>}
+)
+vector_store.<span class="fn">update_document</span>(
+    document_id=<span class="str">'fdb1dc2c-b27b-4f18-80ef-ee48f4d9a31f'</span>,
+    document=updated_doc1
+)</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">10</div>
+                    <div class="step-content">
+                        <h4>Delete Documents</h4>
+                        <p>Remove a document by its UUID. Pass IDs as a list.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span>delete document</span><span class="lang-badge">Python</span>
+                            </div>
+                            <pre>vector_store.<span class="fn">delete</span>(ids=[<span class="str">'fdb1dc2c-b27b-4f18-80ef-ee48f4d9a31f'</span>])
+
+<span class="cm"># Verify deletion</span>
+vector_store.<span class="fn">get</span>(include=[<span class="str">'embeddings'</span>, <span class="str">'documents'</span>, <span class="str">'metadatas'</span>])
+<span class="cm"># The deleted document will no longer appear in results</span></pre>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Quick Reference -->
+            <div style="margin-top: 36px; margin-bottom: 12px;">
+                <span
+                    style="font-family: Syne, sans-serif; font-weight: 700; color: var(--text); font-size: 16px;">Quick
+                    Reference — All CRUD Operations</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Operation</th>
+                        <th>Method</th>
+                        <th>Key Parameters</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-green">CREATE</span></td>
+                        <td><code style="color: var(--accent);">add_documents(docs)</code></td>
+                        <td>List of Document objects → returns UUIDs</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-blue">READ</span></td>
+                        <td><code style="color: var(--accent);">similarity_search(query, k)</code></td>
+                        <td><code>query</code>: string, <code>k</code>: int (top results)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-blue">READ+SCORE</span></td>
+                        <td><code style="color: var(--accent);">similarity_search_with_score(...)</code></td>
+                        <td>Same + returns distance scores</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-blue">FILTER</span></td>
+                        <td><code style="color: var(--accent);">similarity_search_with_score(..., filter={})</code></td>
+                        <td><code>filter</code>: dict of metadata conditions</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-orange">UPDATE</span></td>
+                        <td><code style="color: var(--accent);">update_document(document_id, document)</code></td>
+                        <td>UUID string + new Document object</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge"
+                                style="background: rgba(255,107,107,0.15); color: var(--accent2); border: 1px solid rgba(255,107,107,0.3);">DELETE</span>
+                        </td>
+                        <td><code style="color: var(--accent);">delete(ids=[...])</code></td>
+                        <td>List of UUID strings to remove</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-blue">INSPECT</span></td>
+                        <td><code style="color: var(--accent);">get(include=[...])</code></td>
+                        <td><code>'embeddings'</code>, <code>'documents'</code>, <code>'metadatas'</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- FOOTER -->
+        <div
+            style="border-top: 1px solid var(--border); padding-top: 32px; margin-top: 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+            <div>
+                <div style="font-family: Syne, sans-serif; font-weight: 800; font-size:16px; color: var(--text);">Vector
+                    Stores in LangChain</div>
+                <div
+                    style="color: var(--muted); font-size:12px; margin-top:4px; font-family: JetBrains Mono, monospace;">
+                    CampusX · Generative AI Series · Video 12</div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <span class="badge badge-blue">LangChain</span>
+                <span class="badge badge-green">ChromaDB</span>
+                <span class="badge badge-orange">OpenAI Embeddings</span>
+                <span class="badge badge-blue">FAISS</span>
+            </div>
+        </div>
+
+    </div><!-- end container -->
+</body>
+
+</html>
