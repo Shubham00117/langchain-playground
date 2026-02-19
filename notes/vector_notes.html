@@ -610,20 +610,30 @@
 
     <!-- NAV -->
     <nav class="toc">
-        <a href="#s1">Why Vector Stores</a>
-        <a href="#s2">What are Vector Stores</a>
-        <a href="#s3">VS vs VDB</a>
-        <a href="#s4">LangChain API</a>
-        <a href="#s5">Chroma DB</a>
-        <a href="#s6">Code</a>
+        <a href="#s1">34. Why Vector Stores</a>
+        <a href="#s2">35. What are Vector Stores</a>
+        <a href="#s3">36. VS vs VDB</a>
+        <a href="#s4">37. LangChain API</a>
+        <a href="#s5">38. Chroma DB</a>
+        <a href="#s6">39. Code Implementation</a>
     </nav>
 
     <div class="container">
 
+        <!-- ===================== MODULE HEADER ===================== -->
+        <div style="margin-bottom: 64px; border-bottom: 2px solid var(--accent); padding-bottom: 12px;">
+            <div
+                style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--accent); letter-spacing: 4px; text-transform: uppercase;">
+                Module 08</div>
+            <h1
+                style="font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; color: var(--text); margin-top: 8px;">
+                Vector Stores</h1>
+        </div>
+
         <!-- ===================== SECTION 1 ===================== -->
         <div class="section" id="s1">
             <div class="section-header">
-                <span class="section-num">01</span>
+                <span class="section-num">34</span>
                 <h2>Why Vector Stores?</h2>
             </div>
 
@@ -834,7 +844,7 @@
         <!-- ===================== SECTION 2 ===================== -->
         <div class="section" id="s2">
             <div class="section-header">
-                <span class="section-num">02</span>
+                <span class="section-num">35</span>
                 <h2>What are Vector Stores?</h2>
             </div>
 
@@ -995,8 +1005,35 @@
         <!-- ===================== SECTION 3 ===================== -->
         <div class="section" id="s3">
             <div class="section-header">
-                <span class="section-num">03</span>
+                <span class="section-num">36</span>
                 <h2>Vector Store vs Vector Database</h2>
+            </div>
+            <!-- Quick Definitions -->
+            <div class="grid-2" style="margin-bottom: 24px;">
+                <div class="card" style="margin-bottom: 0; border-left: 4px solid var(--accent);">
+                    <h3 style="margin-bottom: 4px;">Vector Store</h3>
+                    <p style="font-size: 13px;">A <strong>lightweight library</strong> (stateless) built for quick
+                        retrieval and similarity search. Ideal for <em>small tasks and prototyping</em>.</p>
+                </div>
+                <div class="card" style="margin-bottom: 0; border-left: 4px solid var(--accent3);">
+                    <h3 style="margin-bottom: 4px;">Vector Database</h3>
+                    <p style="font-size: 13px;">A <strong>complete system</strong> (stateful) with persistence, scaling,
+                        and security. Built for <em>production-level applications</em>.</p>
+                </div>
+            </div>
+
+            <!-- State Definitions -->
+            <div class="grid-2" style="margin-bottom: 24px;">
+                <div class="card" style="margin-bottom: 0; border-left: 4px solid var(--accent2);">
+                    <h3 style="margin-bottom: 4px;">Stateless</h3>
+                    <p style="font-size: 13px;">Data is lost when the program ends. It <strong>doesn't remember</strong>
+                        past info unless manually saved.</p>
+                </div>
+                <div class="card" style="margin-bottom: 0; border-left: 4px solid var(--accent4);">
+                    <h3 style="margin-bottom: 4px;">Stateful</h3>
+                    <p style="font-size: 13px;">Data is <strong>saved permanently</strong> (persistence). It remembers
+                        and maintains info across sessions.</p>
+                </div>
             </div>
 
             <table>
@@ -1040,8 +1077,9 @@
                     </tr>
                     <tr>
                         <td><strong>Examples</strong></td>
-                        <td><span class="badge badge-blue">FAISS</span><span class="badge badge-blue">Chroma</span></td>
-                        <td><span class="badge badge-green">Pinecone</span><span
+                        <td><span class="badge badge-blue">FAISS</span></td>
+                        <td><span class="badge badge-green">ChromaDB</span><span
+                                class="badge badge-green">Pinecone</span><span
                                 class="badge badge-green">Milvus</span><span
                                 class="badge badge-green">Qdrant</span><span class="badge badge-green">Weaviate</span>
                         </td>
@@ -1051,7 +1089,8 @@
 
             <div class="info-box orange" style="margin-top:16px;">
                 <strong>Summary:</strong> A vector database is effectively a vector store <em>with extra database
-                    features</em> (clustering, scaling, security, metadata filtering, durability). Vector DB ⊃ Vector
+                    features</em> (clustering, scaling, security, metadata filtering, durability). Vector DB ⊃
+                Vector
                 Store.
             </div>
         </div>
@@ -1059,27 +1098,28 @@
         <!-- ===================== SECTION 4 ===================== -->
         <div class="section" id="s4">
             <div class="section-header">
-                <span class="section-num">04</span>
+                <span class="section-num">37</span>
                 <h2>Vector Stores in LangChain</h2>
             </div>
 
-            <div class="grid-3">
-                <div class="card">
-                    <h3>Supported Stores</h3>
-                    <p>LangChain integrates with FAISS, Pinecone, Chroma, Qdrant, Weaviate, and more — giving
-                        flexibility in scale &amp; deployment.</p>
-                </div>
-                <div class="card">
-                    <h3>Common Interface</h3>
-                    <p>A uniform Vector Store API lets you swap backends (e.g., FAISS → Pinecone) with <strong>minimal
-                            code changes</strong>.</p>
-                </div>
-                <div class="card">
-                    <h3>Metadata Handling</h3>
-                    <p>Attach metadata (timestamps, authors, tags) to each document — enables <strong>filter-based
-                            retrieval</strong>.</p>
-                </div>
+            <!-- Theory Summary -->
+            <div class="info-box" style="margin-top: 24px;">
+                <strong style="display: block; margin-bottom: 8px; color: var(--accent);">Theory In Short:</strong>
+                <ul class="feature-list">
+                    <li><strong>Standardized API:</strong> LangChain acts as a middleman, allowing you to use one set of
+                        commands for 50+ different databases.</li>
+                    <li><strong>Swappability:</strong> Switch between local (Chroma) and cloud (Pinecone) by changing
+                        only
+                        the class name.</li>
+                    <li><strong>Hybrid Search:</strong> Combines semantic search with metadata filtering for highly
+                        precise
+                        results.</li>
+                    <li><strong>Workflow:</strong> Text → Embedded Vectors → Vector Store → Similarity Search Query →
+                        Top
+                        Hits.</li>
+                </ul>
             </div>
+
 
             <!-- Common API -->
             <div style="margin-top: 20px; margin-bottom: 8px;">
@@ -1091,25 +1131,18 @@
                     <span>LangChain Vector Store Interface</span>
                     <span class="lang-badge">Python</span>
                 </div>
-                <pre><span class="cm"># Create vector store from documents</span>
+                <pre><span class="cm"># 1. Create: From documents or raw text</span>
 vs = VectorStore.<span class="fn">from_documents</span>(<span class="var">docs</span>, <span class="var">embedding</span>)
-<span class="cm"># OR from raw texts</span>
 vs = VectorStore.<span class="fn">from_texts</span>(<span class="var">texts</span>, <span class="var">embedding</span>)
 
-<span class="cm"># Add more documents</span>
-vs.<span class="fn">add_documents</span>(<span class="var">docs</span>)
+<span class="cm"># 2. Update: Add more data later</span>
+vs.<span class="fn">add_documents</span>(<span class="var">new_docs</span>)
 
-<span class="cm"># Similarity search — returns top k Documents</span>
-results = vs.<span class="fn">similarity_search</span>(<span class="var">query</span>, k=<span class="num">4</span>)
+<span class="cm"># 3. Read: Basic similarity search (Top-K)</span>
+docs = vs.<span class="fn">similarity_search</span>(<span class="var">query</span>, k=<span class="num">3</span>)
 
-<span class="cm"># Similarity search with scores</span>
-results = vs.<span class="fn">similarity_search_with_score</span>(<span class="var">query</span>, k=<span class="num">4</span>)
-
-<span class="cm"># Metadata filtering</span>
-results = vs.<span class="fn">similarity_search_with_score</span>(
-    <span class="var">query</span>=<span class="str">""</span>,
-    filter={<span class="str">"team"</span>: <span class="str">"Mumbai Indians"</span>}
-)</pre>
+<span class="cm"># 4. Filter: Similarity search with metadata</span>
+docs = vs.<span class="fn">similarity_search</span>(<span class="var">query</span>, filter={<span class="str">"team"</span>: <span class="str">"MI"</span>})</pre>
             </div>
 
             <!-- Swap diagram -->
@@ -1147,12 +1180,13 @@ results = vs.<span class="fn">similarity_search_with_score</span>(
         <!-- ===================== SECTION 5 ===================== -->
         <div class="section" id="s5">
             <div class="section-header">
-                <span class="section-num">05</span>
-                <h2>Chroma Vector Store</h2>
+                <span class="section-num">38</span>
+                <h2>Chroma Vector Database</h2>
             </div>
 
             <div class="info-box green">
-                <strong>Chroma</strong> is a lightweight, open-source vector database especially friendly for <em>local
+                <strong>Chroma</strong> is a lightweight, open-source vector database especially friendly for
+                <em>local
                     development</em> and small- to medium-scale production needs.
             </div>
 
@@ -1232,7 +1266,7 @@ results = vs.<span class="fn">similarity_search_with_score</span>(
         <!-- ===================== SECTION 6 ===================== -->
         <div class="section" id="s6">
             <div class="section-header">
-                <span class="section-num">06</span>
+                <span class="section-num">39</span>
                 <h2>Code Implementation</h2>
             </div>
 
@@ -1245,7 +1279,8 @@ results = vs.<span class="fn">similarity_search_with_score</span>(
                         <h4>Imports</h4>
                         <p>Import necessary classes from LangChain.</p>
                         <div class="code-block">
-                            <div class="code-header"><span>imports</span><span class="lang-badge">Python</span></div>
+                            <div class="code-header"><span>imports</span><span class="lang-badge">Python</span>
+                            </div>
                             <pre><span class="kw">from</span> langchain_openai <span class="kw">import</span> <span class="fn">OpenAIEmbeddings</span>
 <span class="kw">from</span> langchain.vectorstores <span class="kw">import</span> <span class="fn">Chroma</span>
 <span class="kw">from</span> langchain.schema <span class="kw">import</span> <span class="fn">Document</span></pre>
@@ -1257,7 +1292,8 @@ results = vs.<span class="fn">similarity_search_with_score</span>(
                     <div class="step-num">2</div>
                     <div class="step-content">
                         <h4>Create Documents with Metadata</h4>
-                        <p>Each Document has <code>page_content</code> (the text) and <code>metadata</code> (a dict for
+                        <p>Each Document has <code>page_content</code> (the text) and <code>metadata</code> (a dict
+                            for
                             filtering).</p>
                         <div class="code-block">
                             <div class="code-header"><span>create documents — IPL players example</span><span
@@ -1289,7 +1325,8 @@ docs = [doc1, doc2, doc3, doc4, doc5]</pre>
                             disk), and a collection name.</p>
                         <div class="code-block">
                             <div class="code-header"><span>initialize chroma</span><span
-                                    class="lang-badge">Python</span></div>
+                                    class="lang-badge">Python</span>
+                            </div>
                             <pre>vector_store = <span class="fn">Chroma</span>(
     embedding_function=<span class="fn">OpenAIEmbeddings</span>(),
     persist_directory=<span class="str">'my_chroma_db'</span>,  <span class="cm"># saves as SQLite file</span>
@@ -1303,7 +1340,8 @@ docs = [doc1, doc2, doc3, doc4, doc5]</pre>
                     <div class="step-num">4</div>
                     <div class="step-content">
                         <h4>Add Documents</h4>
-                        <p>Embed and store all documents. Returns a list of auto-generated UUIDs for each document.</p>
+                        <p>Embed and store all documents. Returns a list of auto-generated UUIDs for each document.
+                        </p>
                         <div class="code-block">
                             <div class="code-header"><span>add documents</span><span class="lang-badge">Python</span>
                             </div>
@@ -1320,7 +1358,8 @@ docs = [doc1, doc2, doc3, doc4, doc5]</pre>
                         <p>Inspect what's stored — embeddings, documents, and metadata.</p>
                         <div class="code-block">
                             <div class="code-header"><span>view all documents</span><span
-                                    class="lang-badge">Python</span></div>
+                                    class="lang-badge">Python</span>
+                            </div>
                             <pre>vector_store.<span class="fn">get</span>(include=[<span class="str">'embeddings'</span>, <span class="str">'documents'</span>, <span class="str">'metadatas'</span>])
 <span class="cm"># Returns dict with: ids, documents, metadatas, embeddings</span></pre>
                         </div>
@@ -1334,7 +1373,8 @@ docs = [doc1, doc2, doc3, doc4, doc5]</pre>
                         <p>Query the vector store. Returns top-k most similar Documents.</p>
                         <div class="code-block">
                             <div class="code-header"><span>similarity search</span><span
-                                    class="lang-badge">Python</span></div>
+                                    class="lang-badge">Python</span>
+                            </div>
                             <pre>results = vector_store.<span class="fn">similarity_search</span>(
     query=<span class="str">'Who among these are a bowler?'</span>,
     k=<span class="num">2</span>
@@ -1349,7 +1389,8 @@ docs = [doc1, doc2, doc3, doc4, doc5]</pre>
                     <div class="step-num">7</div>
                     <div class="step-content">
                         <h4>Similarity Search with Score</h4>
-                        <p>Same as above but also returns a <strong>distance score</strong> (lower = more similar in L2
+                        <p>Same as above but also returns a <strong>distance score</strong> (lower = more similar in
+                            L2
                             distance).</p>
                         <div class="code-block">
                             <div class="code-header"><span>similarity search with score</span><span
@@ -1390,7 +1431,7 @@ docs = [doc1, doc2, doc3, doc4, doc5]</pre>
                     <div class="step-num">9</div>
                     <div class="step-content">
                         <h4>Update Documents</h4>
-                        <p>Update a document by its UUID (obtained when adding documents).</p>
+                        <p>Update documents by their UUIDs (obtained when adding data).</p>
                         <div class="code-block">
                             <div class="code-header"><span>update document</span><span class="lang-badge">Python</span>
                             </div>
@@ -1398,9 +1439,9 @@ docs = [doc1, doc2, doc3, doc4, doc5]</pre>
     page_content=<span class="str">"Virat Kohli, the former captain of RCB, is renowned..."</span>,
     metadata={<span class="str">"team"</span>: <span class="str">"Royal Challengers Bangalore"</span>}
 )
-vector_store.<span class="fn">update_document</span>(
-    document_id=<span class="str">'fdb1dc2c-b27b-4f18-80ef-ee48f4d9a31f'</span>,
-    document=updated_doc1
+vector_store.<span class="fn">update_documents</span>(
+    ids=[<span class="str">'fdb1dc2c-b27b-4f18-80ef-ee48f4d9a31f'</span>],
+    documents=[updated_doc1]
 )</pre>
                         </div>
                     </div>
@@ -1457,13 +1498,14 @@ vector_store.<span class="fn">get</span>(include=[<span class="str">'embeddings'
                     </tr>
                     <tr>
                         <td><span class="badge badge-blue">FILTER</span></td>
-                        <td><code style="color: var(--accent);">similarity_search_with_score(..., filter={})</code></td>
+                        <td><code style="color: var(--accent);">similarity_search_with_score(..., filter={})</code>
+                        </td>
                         <td><code>filter</code>: dict of metadata conditions</td>
                     </tr>
                     <tr>
                         <td><span class="badge badge-orange">UPDATE</span></td>
-                        <td><code style="color: var(--accent);">update_document(document_id, document)</code></td>
-                        <td>UUID string + new Document object</td>
+                        <td><code style="color: var(--accent);">update_documents(ids=[...], documents=[...])</code></td>
+                        <td>List of UUIDs + List of Document objects</td>
                     </tr>
                     <tr>
                         <td><span class="badge"
@@ -1485,7 +1527,8 @@ vector_store.<span class="fn">get</span>(include=[<span class="str">'embeddings'
         <div
             style="border-top: 1px solid var(--border); padding-top: 32px; margin-top: 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
             <div>
-                <div style="font-family: Syne, sans-serif; font-weight: 800; font-size:16px; color: var(--text);">Vector
+                <div style="font-family: Syne, sans-serif; font-weight: 800; font-size:16px; color: var(--text);">
+                    Vector
                     Stores in LangChain</div>
                 <div
                     style="color: var(--muted); font-size:12px; margin-top:4px; font-family: JetBrains Mono, monospace;">

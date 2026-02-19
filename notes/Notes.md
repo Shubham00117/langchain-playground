@@ -603,6 +603,9 @@ from langchain_community.document_loaders.csv_loader import CSVLoader
 loader = CSVLoader(file_path="data.csv")
 data = loader.load()
 
+# Combine all rows into a single text block for the LLM
+context = "\n".join([doc.page_content for doc in data])
+
 print(len(data)) # equals number of rows
 ```
 
@@ -657,12 +660,18 @@ from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
 
 # load all PDFs in 'books' folder
 loader = DirectoryLoader(
-    path='books',
-    glob='*.pdf',
-    loader_cls=PyPDFLoader
+    path='books',        # folder where files are stored
+    glob='*.pdf',       # file pattern to match (e.g., all PDFs)
+    loader_cls=PyPDFLoader # specific loader to use for each file found
 )
 docs = loader.load()
 ```
+
+**Common Glob Patterns:**
+- `*.pdf` → Only PDFs in the main folder.
+- `**/*.pdf` → PDFs in the main folder **and all subfolders** (recursive).
+- `**/*.txt` → All Text files recursively.
+- `*.*` → Every file in the main folder.
 
 > `DirectoryLoader(path, glob)` → finds files → delegates to `loader_cls` → aggregated docs.
 
@@ -676,6 +685,7 @@ docs = loader.load()
 # standard load - high memory usage
 # docs = loader.load()
 
+# DirectoryLoader supports lazy_load() which returns a generator
 # lazy load - efficient memory usage
 docs_generator = loader.lazy_load()
 
@@ -696,19 +706,22 @@ for doc in docs_generator:
 
 **Concept:** Splits text purely based on a **character count** (e.g., every 100 characters). It’s the simplest method but can break words or sentences in the middle, losing context.
 
+**What is `chunk_overlap`?**
+It keeps a small piece of text from the end of one chunk and repeats it at the start of the next. This ensures that the context (like a sentence or phrase) isn't completely cut off and helps the AI understand the connection between pieces.
+
 ```python
 from langchain_text_splitters import CharacterTextSplitter
 
-# simple split by character count
+# simple split with overlap
 splitter = CharacterTextSplitter(
     chunk_size=100,
-    chunk_overlap=0,
+    chunk_overlap=20, # repeats 20 characters from previous chunk
     separator=""
 )
 docs = splitter.split_documents(original_docs)
 ```
 
-> `CharacterTextSplitter` → strict length split → may break sentences.
+> `CharacterTextSplitter` → strict length split + `chunk_overlap` for context preservation.
 
 ---
 
@@ -743,6 +756,7 @@ python_splitter = RecursiveCharacterTextSplitter.from_language(
     language=Language.PYTHON, 
     chunk_size=200
 )
+# create_documents expects a list because it can process multiple text sources at once
 docs = python_splitter.create_documents([python_code])
 ```
 
@@ -761,9 +775,13 @@ from langchain_huggingface import HuggingFaceEmbeddings
 # splits when semantic meaning shifts
 splitter = SemanticChunker(
     HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2"),
-    breakpoint_threshold_type="standard_deviation"
+    # splits when meaning shifts significantly from the average
+    breakpoint_threshold_type="standard_deviation",
+    # Robust threshold for large, detailed paragraphs
+    breakpoint_threshold_amount=1.2 
 )
-chunks = splitter.create_documents([text])
+# processes raw text and returns a list of semantic Documents
+chunks = splitter.create_documents([text]) 
 ```
 
 > `SemanticChunker` + Embeddings → detects topic shifts → splits by meaning (not size).
