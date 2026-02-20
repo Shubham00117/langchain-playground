@@ -1,0 +1,2251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What is RAG? — Retrieval Augmented Generation Study Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Reading/Notes Mode Colors */
+            --bg: #fdfaf6;
+            /* Soft beige/off-white background */
+            --bg2: #f5f0e6;
+            /* Slightly darker beige for cards/toc */
+            --bg3: #eee8dc;
+            /* Even darker beige for borders/code headers */
+            --accent: #1e88e5;
+            /* Softer blue */
+            --accent2: #e53935;
+            /* Softer red */
+            --accent3: #43a047;
+            /* Softer green */
+            --accent4: #fb8c00;
+            /* Softer orange */
+            --accent5: #5e35b1;
+            /* Softer purple */
+            --accent6: #00897b;
+            /* Softer teal */
+            --accent7: #f4511e;
+            /* Deep orange */
+            --accent8: #d81b60;
+            /* Softer pink */
+            --text: #3e3a35;
+            /* Soft dark brown/grey instead of harsh black */
+            --text-heading: #2c2925;
+            --muted: #797165;
+            /* Soft brownish grey */
+            --border: #e2d9cd;
+            /* Warm border color */
+            --shadow: 0 4px 16px rgba(90, 80, 70, 0.05);
+            --radius: 12px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Lora', Georgia, serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.75;
+            font-size: 16px;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            background: linear-gradient(135deg, #f5f0e6 0%, #e8e2d5 40%, #fdfaf6 100%);
+            border-bottom: 3px solid var(--accent);
+            padding: 72px 24px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(250, 176, 5, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -60px;
+            left: -60px;
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, rgba(34, 139, 230, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .series-tag {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: var(--accent4);
+            color: #fff;
+            padding: 5px 16px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            font-weight: 800;
+            line-height: 1.1;
+            color: var(--text);
+            margin-bottom: 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 .rag {
+            color: var(--accent);
+            background: linear-gradient(120deg, var(--accent) 0%, var(--accent5) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .hero h1 .stands {
+            font-size: clamp(0.9rem, 1.8vw, 1.2rem);
+            font-weight: 700;
+            color: var(--muted);
+            display: block;
+            margin-top: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            opacity: 0.85;
+        }
+
+        .hero p {
+            font-size: 1.05rem;
+            color: #495057;
+            max-width: 640px;
+            margin: 0 auto 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .meta-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1.5px solid;
+        }
+
+        .pill.blue {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(34, 139, 230, 0.07);
+        }
+
+        .pill.red {
+            border-color: var(--accent2);
+            color: var(--accent2);
+            background: rgba(250, 82, 82, 0.07);
+        }
+
+        .pill.green {
+            border-color: var(--accent3);
+            color: var(--accent3);
+            background: rgba(64, 192, 87, 0.07);
+        }
+
+        .pill.yellow {
+            border-color: var(--accent4);
+            color: #c08900;
+            background: rgba(250, 176, 5, 0.07);
+        }
+
+        .pill.purple {
+            border-color: var(--accent5);
+            color: var(--accent5);
+            background: rgba(121, 80, 242, 0.07);
+        }
+
+        .pill.teal {
+            border-color: var(--accent6);
+            color: var(--accent6);
+            background: rgba(12, 166, 120, 0.07);
+        }
+
+        /* ── TOC ── */
+        .toc {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .toc-inner {
+            display: flex;
+            gap: 4px;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 10px 0;
+        }
+
+        .toc a {
+            font-family: 'Syne', sans-serif;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .toc a:hover {
+            background: var(--bg2);
+            color: var(--accent);
+        }
+
+        /* ── CONTAINER ── */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 52px 24px 80px;
+        }
+
+        /* ── MODULE HEADER ── */
+        .module-header {
+            border-left: 5px solid var(--accent4);
+            padding: 20px 24px;
+            background: linear-gradient(to right, #fffde7, #fff8e1);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            margin-bottom: 56px;
+        }
+
+        .module-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #c08900;
+            margin-bottom: 6px;
+        }
+
+        .module-header p {
+            color: var(--muted);
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── SECTIONS ── */
+        .section {
+            margin-bottom: 76px;
+            scroll-margin-top: 64px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--bg3);
+        }
+
+        .section-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            background: var(--accent);
+            color: #fff;
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .sn-red {
+            background: var(--accent2);
+        }
+
+        .sn-green {
+            background: var(--accent3);
+        }
+
+        .sn-yellow {
+            background: var(--accent4);
+            color: #333;
+        }
+
+        .sn-purple {
+            background: var(--accent5);
+        }
+
+        .sn-teal {
+            background: var(--accent6);
+        }
+
+        .sn-orange {
+            background: var(--accent7);
+        }
+
+        .sn-dark {
+            background: #343a40;
+        }
+
+        .sn-pink {
+            background: #e64980;
+        }
+
+        .section-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.10);
+        }
+
+        .card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .card p,
+        .card li {
+            font-size: 15px;
+            color: #495057;
+        }
+
+        .card ul {
+            padding-left: 18px;
+        }
+
+        .card ul li {
+            margin-bottom: 5px;
+        }
+
+        .card.top-blue {
+            border-top: 3px solid var(--accent);
+        }
+
+        .card.top-red {
+            border-top: 3px solid var(--accent2);
+        }
+
+        .card.top-green {
+            border-top: 3px solid var(--accent3);
+        }
+
+        .card.top-yellow {
+            border-top: 3px solid var(--accent4);
+        }
+
+        .card.top-purple {
+            border-top: 3px solid var(--accent5);
+        }
+
+        .card.top-teal {
+            border-top: 3px solid var(--accent6);
+        }
+
+        .card.top-orange {
+            border-top: 3px solid var(--accent7);
+        }
+
+        .card.top-pink {
+            border-top: 3px solid #e64980;
+        }
+
+        /* ── GRIDS ── */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        /* ── INFO BOXES ── */
+        .info-box {
+            border-left: 4px solid var(--accent);
+            background: rgba(34, 139, 230, 0.06);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            padding: 16px 20px;
+            margin: 20px 0;
+            font-size: 15px;
+        }
+
+        .info-box strong {
+            color: var(--accent);
+            font-family: 'Syne', sans-serif;
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-box.green {
+            border-color: var(--accent3);
+            background: rgba(64, 192, 87, 0.07);
+        }
+
+        .info-box.green strong {
+            color: var(--accent3);
+        }
+
+        .info-box.orange {
+            border-color: var(--accent4);
+            background: rgba(250, 176, 5, 0.08);
+        }
+
+        .info-box.orange strong {
+            color: #c08900;
+        }
+
+        .info-box.red {
+            border-color: var(--accent2);
+            background: rgba(250, 82, 82, 0.07);
+        }
+
+        .info-box.red strong {
+            color: var(--accent2);
+        }
+
+        .info-box.purple {
+            border-color: var(--accent5);
+            background: rgba(121, 80, 242, 0.07);
+        }
+
+        .info-box.purple strong {
+            color: var(--accent5);
+        }
+
+        .info-box.teal {
+            border-color: var(--accent6);
+            background: rgba(12, 166, 120, 0.07);
+        }
+
+        .info-box.teal strong {
+            color: var(--accent6);
+        }
+
+        /* ── CODE BLOCKS ── */
+        .code-block {
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+            border: 1px solid #2d2d2d;
+        }
+
+        .code-header {
+            background: #1e1e2e;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .lang-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: #cdd6f4;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot.r {
+            background: #ff5f57;
+        }
+
+        .dot.y {
+            background: #febc2e;
+        }
+
+        .dot.g {
+            background: #28c840;
+        }
+
+        pre {
+            background: #1e1e2e;
+            padding: 20px 22px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: #cdd6f4;
+        }
+
+        .kw {
+            color: #cba6f7;
+        }
+
+        .fn {
+            color: #89dceb;
+        }
+
+        .str {
+            color: #a6e3a1;
+        }
+
+        .cm {
+            color: #6c7086;
+            font-style: italic;
+        }
+
+        .cl {
+            color: #f9e2af;
+        }
+
+        .num {
+            color: #fab387;
+        }
+
+        .var {
+            color: #89b4fa;
+        }
+
+        /* ── STEPS ── */
+        .steps {
+            margin: 20px 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            align-items: flex-start;
+        }
+
+        .step-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            background: var(--accent);
+            color: #fff;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .step-num.yellow {
+            background: var(--accent4);
+            color: #333;
+        }
+
+        .step-num.green {
+            background: var(--accent3);
+        }
+
+        .step-num.red {
+            background: var(--accent2);
+        }
+
+        .step-num.purple {
+            background: var(--accent5);
+        }
+
+        .step-num.teal {
+            background: var(--accent6);
+        }
+
+        .step-content h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 14px;
+            color: #495057;
+        }
+
+        /* ── TABLE ── */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead th {
+            background: var(--bg3);
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+        }
+
+        tbody td {
+            padding: 11px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: var(--bg2);
+        }
+
+        /* ── BADGE ── */
+        .badge {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+
+        .badge.blue {
+            background: rgba(34, 139, 230, 0.12);
+            color: var(--accent);
+        }
+
+        .badge.green {
+            background: rgba(64, 192, 87, 0.12);
+            color: #2b9c4a;
+        }
+
+        .badge.red {
+            background: rgba(250, 82, 82, 0.12);
+            color: #d93025;
+        }
+
+        .badge.yellow {
+            background: rgba(250, 176, 5, 0.12);
+            color: #c08900;
+        }
+
+        .badge.purple {
+            background: rgba(121, 80, 242, 0.12);
+            color: var(--accent5);
+        }
+
+        .badge.teal {
+            background: rgba(12, 166, 120, 0.12);
+            color: var(--accent6);
+        }
+
+        .badge.dark {
+            background: rgba(52, 58, 64, 0.1);
+            color: #343a40;
+        }
+
+        /* ── ANALOGY ── */
+        .analogy {
+            background: linear-gradient(135deg, #fff9db, #fff3cd);
+            border: 1.5px solid var(--accent4);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .analogy::before {
+            content: '💡';
+            position: absolute;
+            top: -14px;
+            left: 20px;
+            font-size: 24px;
+            background: #fff;
+            padding: 0 6px;
+            border-radius: 50%;
+        }
+
+        .analogy-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: #c08900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .analogy p {
+            font-size: 15px;
+            color: #664d03;
+        }
+
+        /* ── FLOW DIAGRAM ── */
+        .flow-diagram {
+            background: var(--bg2);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 30px 24px;
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        .flow-diagram .title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 22px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .fnode {
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+
+        .fnode.blue {
+            border-color: var(--accent);
+            background: rgba(34, 139, 230, 0.1);
+            color: var(--accent);
+        }
+
+        .fnode.green {
+            border-color: var(--accent3);
+            background: rgba(64, 192, 87, 0.1);
+            color: #2b9c4a;
+        }
+
+        .fnode.yellow {
+            border-color: var(--accent4);
+            background: rgba(250, 176, 5, 0.1);
+            color: #c08900;
+        }
+
+        .fnode.red {
+            border-color: var(--accent2);
+            background: rgba(250, 82, 82, 0.1);
+            color: var(--accent2);
+        }
+
+        .fnode.purple {
+            border-color: var(--accent5);
+            background: rgba(121, 80, 242, 0.1);
+            color: var(--accent5);
+        }
+
+        .fnode.teal {
+            border-color: var(--accent6);
+            background: rgba(12, 166, 120, 0.1);
+            color: var(--accent6);
+        }
+
+        .fnode.orange {
+            border-color: var(--accent7);
+            background: rgba(247, 103, 7, 0.1);
+            color: var(--accent7);
+        }
+
+        .fnode.dark {
+            border-color: #343a40;
+            background: rgba(52, 58, 64, 0.08);
+            color: #343a40;
+        }
+
+        .fnode.circle {
+            width: 84px;
+            height: 84px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .farrow {
+            color: var(--muted);
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 30px;
+            /* Aligns with the middle of the 84px nodes */
+            user-select: none;
+        }
+
+        .flabel {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        /* ── HL ── */
+        .hl {
+            background: rgba(34, 139, 230, 0.1);
+            color: var(--accent);
+            padding: 1px 7px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .hl.green {
+            background: rgba(64, 192, 87, 0.12);
+            color: #2b9c4a;
+        }
+
+        .hl.red {
+            background: rgba(250, 82, 82, 0.12);
+            color: #d93025;
+        }
+
+        .hl.yellow {
+            background: rgba(250, 176, 5, 0.12);
+            color: #c08900;
+        }
+
+        .hl.purple {
+            background: rgba(121, 80, 242, 0.12);
+            color: var(--accent5);
+        }
+
+        .hl.teal {
+            background: rgba(12, 166, 120, 0.12);
+            color: var(--accent6);
+        }
+
+        /* ── RAG STAGE PIPELINE ── */
+        .pipeline {
+            display: flex;
+            align-items: stretch;
+            gap: 12px;
+            margin: 32px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .pipeline-stage {
+            flex: 1;
+            min-width: 180px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 20px;
+            position: relative;
+            text-align: center;
+            background: var(--bg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Removed empty rulesets to fix lint warnings */
+
+        .pipeline-stage .stage-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .pipeline-stage h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .pipeline-stage p {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .ps-index {
+            background: rgba(250, 176, 5, 0.1);
+            border-color: var(--accent4);
+        }
+
+        .ps-index .stage-num {
+            color: #c08900;
+        }
+
+        .ps-retrieval {
+            background: rgba(34, 139, 230, 0.08);
+            border-color: var(--accent);
+        }
+
+        .ps-retrieval .stage-num {
+            color: var(--accent);
+        }
+
+        .ps-augment {
+            background: rgba(121, 80, 242, 0.08);
+            border-color: var(--accent5);
+        }
+
+        .ps-augment .stage-num {
+            color: var(--accent5);
+        }
+
+        .ps-gen {
+            background: rgba(64, 192, 87, 0.08);
+            border-color: var(--accent3);
+        }
+
+        .ps-gen .stage-num {
+            color: #2b9c4a;
+        }
+
+        .ps-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 24px;
+            color: var(--accent);
+            flex-shrink: 0;
+            width: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .ps-arrow {
+                transform: rotate(90deg);
+                width: 100%;
+                height: 30px;
+                margin: 10px 0;
+            }
+
+            .pipeline {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .pipeline-stage {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+
+        /* ── COMPARISON ── */
+        .yes {
+            color: var(--accent3);
+            font-weight: 700;
+        }
+
+        .no {
+            color: var(--accent2);
+        }
+
+        /* ── FOOTER ── */
+        .footer {
+            background: #1a1b2e;
+            color: #cdd6f4;
+            padding: 48px 24px 36px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .footer p {
+            color: #7f8cb8;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .footer-meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #6c7086;
+            margin-bottom: 24px;
+        }
+
+        .footer-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .footer-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #cdd6f4;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* ── UTILS ── */
+        p {
+            margin-bottom: 14px;
+        }
+
+        strong {
+            font-weight: 700;
+        }
+
+        ul,
+        ol {
+            padding-left: 22px;
+            margin-bottom: 14px;
+        }
+
+        li {
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+
+        h3 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+
+        .mb-28 {
+            margin-bottom: 28px;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .text-muted {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        @media (max-width: 640px) {
+
+            .grid-2,
+            .grid-3,
+            .grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .pipeline {
+                flex-direction: column;
+            }
+
+            .pipeline-stage {
+                border-radius: 0 !important;
+                border-left: 2px solid var(--border) !important;
+            }
+
+            .pipeline-stage:first-child {
+                border-radius: var(--radius) var(--radius) 0 0 !important;
+            }
+
+            .pipeline-stage:last-child {
+                border-radius: 0 0 var(--radius) var(--radius) !important;
+            }
+
+            .flow-row {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══════════════ HERO ══════════════ -->
+    <section class="hero">
+        <div class="container">
+            <div class="series-tag">Day 5 Notes · Generative AI · LangChain</div>
+            <h1>
+                What is <span class="rag">RAG</span>?
+                <span class="stands">Retrieval · Augmented · Generation</span>
+            </h1>
+            <p>A complete deep-dive into RAG — the technique that supercharges LLMs with external knowledge, from first
+                principles to full pipeline architecture.</p>
+            <div class="meta-pills">
+                <span class="pill yellow">📚 9 Topics</span>
+                <span class="pill blue">🧠 LLM Concepts</span>
+                <span class="pill green">🔄 4-Stage Pipeline</span>
+                <span class="pill red">⚡ Fine-Tuning vs RAG</span>
+                <span class="pill purple">🎯 In-Context Learning</span>
+                <span class="pill teal">🗄️ Vector Stores</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ TOC ══════════════ -->
+    <nav class="toc">
+        <div class="toc-inner">
+            <a href="#s1">47 · Problem with LLMs</a>
+            <a href="#s2">48 · Fine-Tuning</a>
+            <a href="#s3">49 · In-Context Learning</a>
+            <a href="#s4">50 · What is RAG</a>
+            <a href="#s5">51 · RAG Architecture</a>
+            <a href="#s6">52 · Indexing</a>
+            <a href="#s7">53 · Retrieval</a>
+            <a href="#s8">54 · Augmentation</a>
+            <a href="#s9">55 · Generation</a>
+        </div>
+    </nav>
+
+    <!-- ══════════════ MAIN ══════════════ -->
+    <div class="container">
+
+        <div class="module-header">
+            <h2>Module 9: Retrieval Augmented Generation (RAG)</h2>
+            <p>Course: Generative AI using LangChain · CampusX · 16 April 2025 · Duration: 59:23</p>
+        </div>
+
+        <!-- ─────────────────────────────────
+       S1 — PROBLEM WITH LLMs
+  ───────────────────────────────── -->
+        <section class="section" id="s1">
+            <div class="section-header">
+                <span class="section-num sn-red">47</span>
+                <h2>The Problem with Plain LLMs</h2>
+            </div>
+
+            <div class="info-box red">
+                <strong>🔑 The Core Issue</strong>
+                A standard LLM only has <strong>Parametric Knowledge</strong> — knowledge baked into its weights during
+                training. It cannot access anything outside that snapshot. This creates serious limitations in
+                production applications.
+            </div>
+
+            <div class="analogy">
+                <div class="analogy-title">Real-World Analogy</div>
+                <p>An LLM is like a highly educated professor who graduated years ago and has been isolated ever since.
+                    They know everything up to their graduation date, but they have no access to last year's research,
+                    your company's private documents, or anything that happened yesterday. RAG gives them a library
+                    card.</p>
+            </div>
+
+            <!-- Flow: Standard LLM -->
+            <div class="flow-diagram mb-20">
+                <div class="title">Standard LLM — What Goes Wrong</div>
+                <div class="flow-row">
+                    <div>
+                        <div class="fnode red circle">Query</div>
+                        <div class="flabel">User's question</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode blue" style="padding:14px 24px;">LLM</div>
+                        <div class="flabel">Parametric knowledge only</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode red">Response ⚠️</div>
+                        <div class="flabel">May be wrong/outdated</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:16px;">3 Key Limitations</h3>
+            <div class="grid-3">
+                <div class="card top-red">
+                    <h3>🔒 1. Private Data</h3>
+                    <p>LLMs have never seen your company's internal documents, proprietary databases, customer records,
+                        or confidential reports. They <strong>cannot answer questions</strong> about private
+                        information.</p>
+                </div>
+                <div class="card top-yellow">
+                    <h3>📅 2. Recent Data</h3>
+                    <p>LLMs have a <strong>training cutoff date</strong>. They are unaware of recent events, new
+                        research papers, latest product releases, or any data published after their training ended.</p>
+                </div>
+                <div class="card top-orange">
+                    <h3>👻 3. Hallucination</h3>
+                    <p>When the LLM doesn't know the answer, it may <strong>confidently fabricate</strong>
+                        plausible-sounding but incorrect responses — a phenomenon called hallucination. This is
+                        dangerous in production.</p>
+                </div>
+            </div>
+
+            <div class="info-box orange">
+                <strong>💡 Two Solutions</strong>
+                There are two main ways to address these limitations: <strong>Fine-Tuning</strong> (update the model's
+                weights with new data) and <strong>RAG</strong> (give the model relevant context at inference time). The
+                next two sections explain both.
+            </div>
+        </section>
+
+        <!-- ─────────────────────────────────
+       S2 — FINE-TUNING
+  ───────────────────────────────── -->
+        <section class="section" id="s2">
+            <div class="section-header">
+                <span class="section-num sn-orange">48</span>
+                <h2>Fine-Tuning (Alternative to RAG)</h2>
+            </div>
+
+            <div class="info-box orange">
+                <strong>📖 Definition</strong>
+                Fine-tuning takes a <strong>pretrained LLM</strong> and further trains it on a <strong>smaller,
+                    domain-specific dataset</strong> to adapt its behavior. Think of it like a student (LLM) who has
+                finished general education (pretraining) and now enrolls in a specialized professional course
+                (fine-tuning).
+            </div>
+
+            <div class="analogy">
+                <div class="analogy-title">Real-World Analogy</div>
+                <p>A <strong>student (LLM)</strong> goes through general school (pretraining → general knowledge). Then
+                    they choose a specialty — their exams are fine-tuning and their specialized degree is the
+                    domain-specific model. The fine-tuning shapes their expertise.</p>
+            </div>
+
+            <div class="flow-diagram mb-28">
+                <div class="title">Fine-Tuning Process</div>
+                <div class="flow-row">
+                    <div>
+                        <div class="fnode blue">Pretrained LLM</div>
+                        <div class="flabel">General knowledge</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode yellow">Domain-Specific Dataset</div>
+                        <div class="flabel">Hundreds to 100k examples</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode green">Fine-Tuned Model</div>
+                        <div class="flabel">Domain expert</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:16px;">Fine-Tuning — 4 Steps</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num yellow">1</div>
+                    <div class="step-content">
+                        <h4>Collect Data</h4>
+                        <p>Gather a few hundred to a few hundred-thousand carefully curated examples in the format:
+                            <strong>prompt → desired output</strong>. Quality matters far more than quantity.
+                        </p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num yellow">2</div>
+                    <div class="step-content">
+                        <h4>Choose a Method</h4>
+                        <p>Pick between: <span class="hl yellow">Full-parameter FT</span> (all weights updated), <span
+                                class="hl purple">LoRA / QLoRA</span> (low-rank adapters, efficient), or <span
+                                class="hl green">parameter-efficient adapters</span>.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num yellow">3</div>
+                    <div class="step-content">
+                        <h4>Train for a Few Epochs</h4>
+                        <p>For <strong>LoRA</strong>: base weights are frozen, only a small subset of adapter weights
+                            are updated. For <strong>Full FT</strong>: all model weights are updated over training
+                            epochs.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num yellow">4</div>
+                    <div class="step-content">
+                        <h4>Evaluate & Safety-Test</h4>
+                        <p>Measure <strong>exact-match, factuality, and hallucination rate</strong> against held-out
+                            data. Red-team the model for safety before deployment.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:16px;">Types of Fine-Tuning</h3>
+            <div class="grid-3">
+                <div class="card top-blue">
+                    <h3>📋 Supervised Tuning</h3>
+                    <p>Uses <strong>labelled data</strong>: prompt → desired output pairs. The model learns to replicate
+                        expected responses for specific inputs. Most common type.</p>
+                </div>
+                <div class="card top-teal">
+                    <h3>📖 Continued Pretraining</h3>
+                    <p>Feed the model domain-specific <strong>unlabelled text</strong> (e.g., medical journals, legal
+                        documents, transcripts). The model learns the vocabulary and style of that domain.</p>
+                </div>
+                <div class="card top-purple">
+                    <h3>🎖️ RLHF</h3>
+                    <p><strong>Reinforcement Learning from Human Feedback</strong>. Humans rank model outputs, and the
+                        model is trained with a reward signal to produce more preferred responses.</p>
+                </div>
+            </div>
+
+            <!-- Fine-Tuning vs RAG Comparison -->
+            <h3 style="margin-bottom:16px; margin-top:28px;">Fine-Tuning vs RAG — Quick Comparison</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dimension</th>
+                            <th>Fine-Tuning</th>
+                            <th>RAG</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Knowledge update</td>
+                            <td>Baked into weights (static)</td>
+                            <td>Dynamic — retrieved at query time</td>
+                        </tr>
+                        <tr>
+                            <td>Handles private data?</td>
+                            <td class="yes">✓ After training</td>
+                            <td class="yes">✓ At query time</td>
+                        </tr>
+                        <tr>
+                            <td>Handles recent data?</td>
+                            <td class="no">✗ Needs re-training</td>
+                            <td class="yes">✓ Just update the DB</td>
+                        </tr>
+                        <tr>
+                            <td>Reduces hallucination?</td>
+                            <td>Partially</td>
+                            <td class="yes">✓ Grounded in source docs</td>
+                        </tr>
+                        <tr>
+                            <td>Cost</td>
+                            <td>High (GPU training)</td>
+                            <td>Lower (inference only)</td>
+                        </tr>
+                        <tr>
+                            <td>Transparency</td>
+                            <td>Opaque</td>
+                            <td class="yes">✓ Can cite sources</td>
+                        </tr>
+                        <tr>
+                            <td>Best for</td>
+                            <td>Style/behavior changes</td>
+                            <td>Knowledge-intensive QA</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ─────────────────────────────────
+       S3 — IN-CONTEXT LEARNING
+  ───────────────────────────────── -->
+        <section class="section" id="s3">
+            <div class="section-header">
+                <span class="section-num sn-purple">49</span>
+                <h2>In-Context Learning (ICL)</h2>
+            </div>
+
+            <div class="info-box purple">
+                <strong>🧠 Definition</strong>
+                <strong>In-Context Learning</strong> is a core capability of Large Language Models (LLMs) like GPT-3/4,
+                Claude, and Llama, where the model learns to solve a task purely by <strong>seeing examples in the
+                    prompt</strong> — without updating its weights. No training, no gradient updates.
+            </div>
+
+            <div class="analogy">
+                <div class="analogy-title">Real-World Analogy</div>
+                <p>ICL is like handing a genius intern a <strong>few example problems with solutions</strong> before
+                    they tackle a new problem. They don't go back to school (no weight update) — they just infer the
+                    pattern from what they see in front of them and apply it immediately.</p>
+            </div>
+
+            <div class="grid-2 mb-28">
+                <div class="card top-purple">
+                    <h3>🔬 How It Works</h3>
+                    <ul>
+                        <li>Include <strong>example input-output pairs</strong> in the prompt</li>
+                        <li>The LLM sees the pattern and applies it to the final input</li>
+                        <li><strong>No gradient updates</strong> — weights stay frozen</li>
+                        <li>Works via <strong>attention mechanisms</strong> over the context window</li>
+                    </ul>
+                </div>
+                <div class="card top-teal">
+                    <h3>📈 Why It Emerged</h3>
+                    <p>ICL is an <strong>emergent property</strong> — a behavior that suddenly appears when a system
+                        reaches a certain scale or complexity, not explicitly programmed.</p>
+                    <div
+                        style="margin-top:12px; font-size:13px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span class="badge dark">GPT-1</span>
+                        <span style="color:var(--muted);">→</span>
+                        <span class="badge dark">GPT-2</span>
+                        <span style="color:var(--muted);">→</span>
+                        <span class="badge purple">GPT-3 (175B) ✨ ICL emerges</span>
+                    </div>
+                    <p style="font-size:13px; margin-top:10px; color:var(--muted);">Reference: "Language Models are
+                        Few-Shot Learners" — Brown et al., 2020 (arXiv: 2005.14165)</p>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:16px;">3 Types of In-Context Learning</h3>
+            <div class="grid-3">
+                <div class="card top-blue">
+                    <h3>0️⃣ Zero-Shot</h3>
+                    <p>Just give the task instruction with no examples. The model must infer what to do purely from the
+                        description. Most flexible, least guided.</p>
+                    <div
+                        style="background:#1e1e2e; border-radius:6px; padding:10px 12px; margin-top:10px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#cdd6f4;">
+                        "Classify sentiment: I love this movie" → Positive</div>
+                </div>
+                <div class="card top-yellow">
+                    <h3>🎯 Few-Shot</h3>
+                    <p>Provide 2–5 example input-output pairs before the actual task. This is the classic ICL paradigm
+                        demonstrated in the GPT-3 paper.</p>
+                    <div
+                        style="background:#1e1e2e; border-radius:6px; padding:10px 12px; margin-top:10px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#cdd6f4;">
+                        "I love this phone" → Positive<br>"App crashes a lot" → Negative<br>"I hate battery life" →
+                        <span style="color:#a6e3a1;">?</span>
+                    </div>
+                </div>
+                <div class="card top-teal">
+                    <h3>🔗 Chain-of-Thought</h3>
+                    <p>Show examples where the model reasons step-by-step before giving an answer. Dramatically improves
+                        performance on <strong>multi-step reasoning</strong> tasks.</p>
+                    <div
+                        style="background:#1e1e2e; border-radius:6px; padding:10px 12px; margin-top:10px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#cdd6f4;">
+                        Q: John has 3 apples, buys 4 more. How many?<br>A: 3 + 4 = 7 → <span
+                            style="color:#a6e3a1;">7</span></div>
+                </div>
+            </div>
+
+            <!-- Full ICL Prompt Example -->
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="dots">
+                        <div class="dot r"></div>
+                        <div class="dot y"></div>
+                        <div class="dot g"></div>
+                    </div>
+                    <span class="lang-badge">Few-Shot NER Prompt Example</span>
+                </div>
+                <pre><code><span class="cm"># Label the named entities (Person, Location, Organization)</span>
+
+<span class="cm"># Example 1</span>
+<span class="var">Sentence</span>: Elon Musk founded SpaceX.
+<span class="str">Entities</span>: [Elon Musk → Person], [SpaceX → Organization]
+
+<span class="cm"># Example 2</span>
+<span class="var">Sentence</span>: The Eiffel Tower is in Paris.
+<span class="str">Entities</span>: [Eiffel Tower → Location], [Paris → Location]
+
+<span class="cm"># Now label this:</span>
+<span class="var">Sentence</span>: Sundar Pichai leads Google.
+<span class="str">Entities</span>: <span class="cm"># LLM completes this without any training!</span></code></pre>
+            </div>
+
+            <div class="info-box">
+                <strong>🔗 Connection to RAG</strong>
+                RAG uses ICL as its core mechanism. Instead of providing <em>task examples</em>, RAG provides
+                <strong>relevant retrieved documents</strong> as context — telling the LLM "here's the background
+                information you need, now answer the question." The LLM learns from the context at inference time, no
+                retraining needed.
+            </div>
+        </section>
+
+        <!-- ─────────────────────────────────
+       S4 — WHAT IS RAG
+  ───────────────────────────────── -->
+        <section class="section" id="s4">
+            <div class="section-header">
+                <span class="section-num sn-yellow">50</span>
+                <h2>What is RAG? — Definition & Core Idea</h2>
+            </div>
+
+            <div class="info-box orange">
+                <strong>📖 Definition</strong>
+                <strong>RAG (Retrieval Augmented Generation)</strong> is a way to make a language model smarter by
+                giving it <strong>extra information at the time you ask your question</strong>. Instead of just example
+                tasks (like ICL), RAG retrieves <strong>background information, facts, documents, product
+                    manuals</strong> etc. and injects them into the prompt to augment the model's knowledge.
+            </div>
+
+            <div class="grid-2 mb-28">
+                <div class="card top-yellow">
+                    <h3>📐 The Equation</h3>
+                    <div style="text-align:center; padding:20px 10px;">
+                        <div
+                            style="font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; color:var(--text); line-height:1.8;">
+                            <span class="badge blue" style="font-size:14px; padding:6px 14px;">Information
+                                Retrieval</span>
+                            <span style="color:var(--muted); margin:0 12px;">+</span>
+                            <span class="badge green" style="font-size:14px; padding:6px 14px;">Text Generation</span>
+                            <div style="margin-top:12px; font-size:1.8rem; color:var(--accent4);">=</div>
+                            <span class="badge yellow"
+                                style="font-size:16px; padding:8px 20px; margin-top:8px; display:inline-block;">RAG</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card top-blue">
+                    <h3>🎯 Key Mechanism</h3>
+                    <ul>
+                        <li>Retrieve <strong>relevant documents</strong> from an external knowledge base</li>
+                        <li><strong>Inject</strong> those documents into the prompt as context</li>
+                        <li>LLM answers <strong>grounded in the retrieved facts</strong></li>
+                        <li>No model weights are changed — all at <strong>inference time</strong></li>
+                        <li>Can <strong>cite sources</strong>, making answers verifiable</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- RAG Prompt Template -->
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="dots">
+                        <div class="dot r"></div>
+                        <div class="dot y"></div>
+                        <div class="dot g"></div>
+                    </div>
+                    <span class="lang-badge">Standard RAG Prompt Template</span>
+                </div>
+                <pre><code><span class="str">"""You are a helpful assistant.
+Answer the question ONLY from the provided context.
+If the context is insufficient, just say you don't know.
+
+{context}          </span><span class="cm"># &lt;-- Retrieved documents injected here</span>
+
+<span class="str">Question: {question}"""</span>  <span class="cm"># &lt;-- User's query</span></code></pre>
+            </div>
+
+            <div class="info-box green">
+                <strong>✅ Why RAG Wins Over Fine-Tuning for Knowledge Tasks</strong>
+                RAG doesn't require expensive GPU retraining every time new data arrives. Just update the vector
+                database, and the next query automatically gets access to the latest information. It's the difference
+                between <em>teaching a professor everything upfront</em> vs <em>giving them a search engine when they
+                    need to answer a question</em>.
+            </div>
+        </section>
+
+        <!-- ─────────────────────────────────
+       S5 — RAG ARCHITECTURE
+  ───────────────────────────────── -->
+        <section class="section" id="s5">
+            <div class="section-header">
+                <span class="section-num sn-teal">51</span>
+                <h2>Understanding RAG — Overall Architecture</h2>
+            </div>
+
+            <p>RAG is built around <strong>4 sequential stages</strong>. The first two (Indexing + Retrieval) happen
+                offline and at query time respectively. The last two (Augmentation + Generation) happen at inference
+                time.</p>
+
+            <!-- Pipeline -->
+            <div style="margin:28px 0; overflow-x:auto;">
+                <div class="pipeline">
+                    <div class="pipeline-stage ps-index">
+                        <div class="stage-num">Stage 01</div>
+                        <h4>📦 Indexing</h4>
+                        <p>Prepare & store your knowledge base as searchable vectors</p>
+                    </div>
+                    <div class="ps-arrow">→</div>
+                    <div class="pipeline-stage ps-retrieval">
+                        <div class="stage-num">Stage 02</div>
+                        <h4>🔍 Retrieval</h4>
+                        <p>Find the most relevant chunks for the user's query</p>
+                    </div>
+                    <div class="ps-arrow">→</div>
+                    <div class="pipeline-stage ps-augment">
+                        <div class="stage-num">Stage 03</div>
+                        <h4>✏️ Augmentation</h4>
+                        <p>Combine retrieved context + query into an enriched prompt</p>
+                    </div>
+                    <div class="ps-arrow">→</div>
+                    <div class="pipeline-stage ps-gen">
+                        <div class="stage-num">Stage 04</div>
+                        <h4>💬 Generation</h4>
+                        <p>LLM generates a grounded, accurate response</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Architecture Flow -->
+            <div class="flow-diagram">
+                <div class="title">Complete RAG Architecture — End to End</div>
+                <div class="flow-row">
+                    <div>
+                        <div class="fnode red circle">Query</div>
+                        <div class="flabel">User question</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode blue">Prompt</div>
+                        <div class="flabel">Query + Context</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode green">LLM</div>
+                        <div class="flabel">Generates answer</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode teal">Response</div>
+                        <div class="flabel">Grounded output</div>
+                    </div>
+                </div>
+                <div class="flow-row" style="margin-top:16px; border-top:1px dashed var(--border); padding-top:16px;">
+                    <div>
+                        <div class="fnode yellow">External Knowledge Base</div>
+                        <div class="flabel">PDFs, wikis, DBs, docs</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode purple">Retriever</div>
+                        <div class="flabel">Finds relevant chunks</div>
+                    </div>
+                    <div class="farrow">↗</div>
+                    <div
+                        style="font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; max-width:150px;">
+                        Context injected into Prompt</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─────────────────────────────────
+       S6 — INDEXING
+  ───────────────────────────────── -->
+        <section class="section" id="s6">
+            <div class="section-header">
+                <span class="section-num sn-yellow">52</span>
+                <h2>Stage 1 — Indexing</h2>
+            </div>
+
+            <div class="info-box orange">
+                <strong>📦 Definition</strong>
+                <strong>Indexing</strong> is the process of preparing your knowledge base so that it can be efficiently
+                searched at query time. It consists of <strong>4 sub-steps</strong> that transform raw documents into
+                searchable vectors stored in a vector database.
+            </div>
+
+            <div class="analogy">
+                <div class="analogy-title">Real-World Analogy</div>
+                <p>Indexing is like preparing a library before it opens. You first <strong>collect all the
+                        books</strong> (document ingestion), then <strong>break them into chapters</strong> (text
+                    chunking), then create an <strong>index card system</strong> (embeddings) and finally place
+                    everything in <strong>organized shelves</strong> (vector store). When someone queries, you search
+                    the index, not all the books.</p>
+            </div>
+
+            <!-- 4 Sub-steps -->
+            <div class="steps mt-20">
+                <div class="step">
+                    <div class="step-num" style="background:#f76707;">1</div>
+                    <div class="step-content">
+                        <h4>Document Ingestion — Load source knowledge into memory</h4>
+                        <p>Load your raw data from any source. The output is raw text in memory as LangChain Document
+                            objects.</p>
+                        <div class="grid-2" style="margin-top:12px;">
+                            <div class="card top-orange" style="padding:14px 16px;">
+                                <h3 style="font-size:13px;">📂 Source Examples</h3>
+                                <ul style="font-size:13px;">
+                                    <li>PDF reports, Word documents</li>
+                                    <li>YouTube transcripts, blog pages</li>
+                                    <li>GitHub repos, internal wikis</li>
+                                    <li>SQL records, scraped webpages</li>
+                                </ul>
+                            </div>
+                            <div class="card top-blue" style="padding:14px 16px;">
+                                <h3 style="font-size:13px;">🔧 LangChain Loaders</h3>
+                                <ul style="font-size:13px;">
+                                    <li><span class="hl">PyPDFLoader</span></li>
+                                    <li><span class="hl">YoutubeLoader</span></li>
+                                    <li><span class="hl">WebBaseLoader</span></li>
+                                    <li><span class="hl">GitLoader</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num" style="background:#f76707;">2</div>
+                    <div class="step-content">
+                        <h4>Text Chunking — Break large documents into small, semantically meaningful chunks</h4>
+                        <p><strong>Why chunk?</strong> LLMs have context limits (4K–32K tokens). Smaller chunks are more
+                            focused → better semantic search results. A 2-hour transcript becomes dozens of searchable
+                            pieces.</p>
+                        <div class="grid-2" style="margin-top:12px;">
+                            <div class="card top-yellow" style="padding:14px 16px;">
+                                <h3 style="font-size:13px;">❓ Why Chunk?</h3>
+                                <ul style="font-size:13px;">
+                                    <li>LLMs have context limits (4K–32K tokens)</li>
+                                    <li>Smaller chunks = more focused search</li>
+                                    <li>Better semantic similarity matching</li>
+                                </ul>
+                            </div>
+                            <div class="card top-green" style="padding:14px 16px;">
+                                <h3 style="font-size:13px;">🔧 Splitter Tools</h3>
+                                <ul style="font-size:13px;">
+                                    <li><span class="hl green">RecursiveCharacterTextSplitter</span></li>
+                                    <li><span class="hl green">MarkdownHeaderTextSplitter</span></li>
+                                    <li><span class="hl green">SemanticChunker</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num" style="background:#f76707;">3</div>
+                    <div class="step-content">
+                        <h4>Embedding Generation — Convert each chunk into a dense vector that captures its meaning</h4>
+                        <p>Each text chunk is passed through an embedding model, which outputs a high-dimensional
+                            numerical vector. Semantically similar chunks end up with geometrically close vectors —
+                            enabling similarity search.</p>
+                        <div class="grid-3" style="margin-top:12px;">
+                            <div class="card top-purple" style="padding:14px 16px;">
+                                <h3 style="font-size:13px;">☁️ OpenAI</h3>
+                                <p style="font-size:13px;"><span class="hl purple">OpenAIEmbeddings</span></p>
+                            </div>
+                            <div class="card top-teal" style="padding:14px 16px;">
+                                <h3 style="font-size:13px;">🤗 HuggingFace</h3>
+                                <p style="font-size:13px;"><span class="hl teal">SentenceTransformerEmbeddings</span>
+                                </p>
+                            </div>
+                            <div class="card top-blue" style="padding:14px 16px;">
+                                <h3 style="font-size:13px;">🎓 Instructor</h3>
+                                <p style="font-size:13px;"><span class="hl">InstructorEmbeddings</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num" style="background:#f76707;">4</div>
+                    <div class="step-content">
+                        <h4>Storage in a Vector Store — Store vectors + original chunk text + metadata in a vector
+                            database</h4>
+                        <p>The embedding vectors, along with the original chunk text and metadata (source, page number,
+                            etc.), are persisted in a vector database for fast similarity search at query time.</p>
+                        <div class="grid-2" style="margin-top:12px;">
+                            <div class="card top-teal" style="padding:14px 16px;">
+                                <h3 style="font-size:13px;">🏠 Local Vector DBs</h3>
+                                <ul style="font-size:13px;">
+                                    <li><span class="hl teal">FAISS</span> — Facebook AI Similarity Search, fast</li>
+                                    <li><span class="hl teal">Chroma</span> — Lightweight, in-memory</li>
+                                </ul>
+                            </div>
+                            <div class="card top-blue" style="padding:14px 16px;">
+                                <h3 style="font-size:13px;">☁️ Cloud Vector DBs</h3>
+                                <ul style="font-size:13px;">
+                                    <li><span class="hl">Pinecone</span> — Fully managed</li>
+                                    <li><span class="hl">Weaviate</span> — Open-source, multi-modal</li>
+                                    <li><span class="hl">Milvus</span> — High-performance</li>
+                                    <li><span class="hl">Qdrant</span> — Rust-based, fast</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Indexing Pipeline Diagram -->
+            <div class="flow-diagram mt-20">
+                <div class="title">Indexing Pipeline — Visual Flow</div>
+                <div class="flow-row">
+                    <div>
+                        <div class="fnode yellow">Source (WWW/PDF)</div>
+                        <div class="flabel">Raw data</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode orange">Document Loader</div>
+                        <div class="flabel">Sub-step 1</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode yellow">Raw Document</div>
+                        <div class="flabel">Full text</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode orange">Text Splitter</div>
+                        <div class="flabel">Sub-step 2</div>
+                    </div>
+                </div>
+                <div class="flow-row" style="margin-top:16px;">
+                    <div>
+                        <div class="fnode yellow">Chunks ×4</div>
+                        <div class="flabel">Small pieces</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode blue">Embedding Model</div>
+                        <div class="flabel">Sub-step 3</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode green">Vectors ×4</div>
+                        <div class="flabel">Dense representations</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode teal">Vector Store</div>
+                        <div class="flabel">Sub-step 4</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─────────────────────────────────
+       S7 — RETRIEVAL
+  ───────────────────────────────── -->
+        <section class="section" id="s7">
+            <div class="section-header">
+                <span class="section-num sn-blue">53</span>
+                <h2>Stage 2 — Retrieval</h2>
+            </div>
+
+            <div class="info-box">
+                <strong>🔍 Definition</strong>
+                <strong>Retrieval</strong> is the real-time process of <strong>finding the most relevant pieces of
+                    information</strong> from a pre-built index (created during indexing), based on the user's question.
+                It's like asking: <em>"From all the knowledge I have, which 3–5 chunks are most helpful to answer this
+                    query?"</em>
+            </div>
+
+            <div class="analogy">
+                <div class="analogy-title">Real-World Analogy</div>
+                <p>You're in an exam and need to cite sources. Instead of reading every book in the library again, you
+                    quickly <strong>search the index cards</strong> (vector store), find the 3 most relevant passages,
+                    and use them in your answer. That's retrieval — fast, targeted, and relevant.</p>
+            </div>
+
+            <h3 style="margin-bottom:16px;">4 Steps of the Retrieval Process</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h4>Query → Embedding Vector</h4>
+                        <p>The user's query is passed through the <strong>same embedding model</strong> used during
+                            indexing. This converts the question into a dense numerical vector in the same semantic
+                            space as the stored chunks.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h4>Semantic Search in Vector Store</h4>
+                        <p>The query vector is compared against all stored chunk vectors using <strong>cosine
+                                similarity</strong> or <strong>dot product</strong> distance. Chunks with vectors
+                            closest to the query vector are identified as most relevant.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h4>Ranking</h4>
+                        <p>The matched chunks are <strong>ranked by similarity score</strong>. More advanced pipelines
+                            use cross-encoders or reranking models to improve the ordering of results before final
+                            selection.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <h4>Return Most Relevant Chunks (Context)</h4>
+                        <p>The top-K chunks (typically 3–5) are returned as the <strong>context</strong> — the retrieved
+                            knowledge that will be injected into the prompt in the next stage.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retrieval Flow -->
+            <div class="flow-diagram">
+                <div class="title">Retrieval Stage — Flow Diagram</div>
+                <div class="flow-row">
+                    <div>
+                        <div class="fnode red circle">Query</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode purple">Embed Query</div>
+                        <div class="flabel">Same model as indexing</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode teal">Vector Store</div>
+                        <div class="flabel">Semantic search</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode blue">Rank Results</div>
+                        <div class="flabel">By similarity score</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode green">Top-K Chunks</div>
+                        <div class="flabel">Context for LLM</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─────────────────────────────────
+       S8 — AUGMENTATION
+  ───────────────────────────────── -->
+        <section class="section" id="s8">
+            <div class="section-header">
+                <span class="section-num sn-purple">54</span>
+                <h2>Stage 3 — Augmentation</h2>
+            </div>
+
+            <div class="info-box purple">
+                <strong>✏️ Definition</strong>
+                <strong>Augmentation</strong> refers to the step where the <strong>retrieved documents</strong> (chunks
+                of relevant context) are <strong>combined with the user's query</strong> to form a new, enriched prompt
+                for the LLM. This is the "A" in RAG.
+            </div>
+
+            <div class="grid-2 mb-28">
+                <div class="card top-red">
+                    <h3>❌ Without Augmentation (Plain Query)</h3>
+                    <div
+                        style="background:#1e1e2e; border-radius:6px; padding:12px 16px; margin-top:10px; font-size:13px; font-family:'JetBrains Mono',monospace; color:#cdd6f4;">
+                        "What is photosynthesis?"
+                    </div>
+                    <p style="font-size:14px; margin-top:10px; color:var(--muted);">LLM relies purely on parametric
+                        knowledge. May hallucinate or give stale information.</p>
+                </div>
+                <div class="card top-green">
+                    <h3>✅ With Augmentation (RAG Prompt)</h3>
+                    <div
+                        style="background:#1e1e2e; border-radius:6px; padding:12px 16px; margin-top:10px; font-size:13px; font-family:'JetBrains Mono',monospace; color:#cdd6f4; line-height:1.8;">
+                        <span class="cm"># Retrieved context injected:</span><br>
+                        <span class="str">"Photosynthesis is how plants convert light into energy using
+                            chlorophyll..."</span><br><br>
+                        <span class="kw">Question</span>: "What is photosynthesis?"
+                    </div>
+                    <p style="font-size:14px; margin-top:10px; color:var(--muted);">LLM is grounded in specific facts.
+                        Answer is accurate and citable.</p>
+                </div>
+            </div>
+
+            <!-- Augmentation Flow -->
+            <div class="flow-diagram">
+                <div class="title">Augmentation — Combining Context + Query into Prompt</div>
+                <div class="flow-row">
+                    <div>
+                        <div class="fnode green">Retrieved Chunks</div>
+                        <div class="flabel">Context (from Retrieval)</div>
+                    </div>
+                    <div style="font-size:24px; color:var(--muted); padding:0 8px;">+</div>
+                    <div>
+                        <div class="fnode red circle">Query</div>
+                        <div class="flabel">User question</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode blue">Prompt Template</div>
+                        <div class="flabel">Fills {context} + {question}</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode purple">Enriched Prompt</div>
+                        <div class="flabel">Ready for LLM</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-block mt-20">
+                <div class="code-header">
+                    <div class="dots">
+                        <div class="dot r"></div>
+                        <div class="dot y"></div>
+                        <div class="dot g"></div>
+                    </div>
+                    <span class="lang-badge">Augmentation — LangChain Example</span>
+                </div>
+                <pre><code><span class="kw">from</span> <span class="var">langchain_core.prompts</span> <span class="kw">import</span> <span class="cl">ChatPromptTemplate</span>
+
+<span class="cm"># The RAG prompt template — context + question</span>
+<span class="var">rag_prompt</span> = <span class="cl">ChatPromptTemplate</span>.<span class="fn">from_template</span>(<span class="str">"""
+You are a helpful assistant.
+Answer the question ONLY from the provided context.
+If the context is insufficient, just say you don't know.
+
+{context}
+
+Question: {question}
+"""</span>)
+
+<span class="cm"># Augmentation: fill template with retrieved docs + query</span>
+<span class="var">chain</span> = (
+    {<span class="str">"context"</span>: <span class="var">retriever</span>, <span class="str">"question"</span>: <span class="cl">RunnablePassthrough</span>()}
+    | <span class="var">rag_prompt</span>
+    | <span class="var">llm</span>
+    | <span class="cl">StrOutputParser</span>()
+)</code></pre>
+            </div>
+        </section>
+
+        <!-- ─────────────────────────────────
+       S9 — GENERATION
+  ───────────────────────────────── -->
+        <section class="section" id="s9">
+            <div class="section-header">
+                <span class="section-num sn-green">55</span>
+                <h2>Stage 4 — Generation</h2>
+            </div>
+
+            <div class="info-box green">
+                <strong>💬 Definition</strong>
+                <strong>Generation</strong> is the final step where a <strong>Large Language Model (LLM)</strong> uses
+                the user's query and the <strong>retrieved & augmented context</strong> to generate a response. The LLM
+                acts as the "brain" — it reasons over the provided context and produces a coherent, grounded answer.
+            </div>
+
+            <!-- Complete End-to-End Flow -->
+            <div class="flow-diagram mb-28">
+                <div class="title">Complete RAG Pipeline — All 4 Stages</div>
+                <div class="flow-row">
+                    <div>
+                        <div class="fnode red circle">Query</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode blue">Retriever</div>
+                        <div class="flabel">Stage 2</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode yellow" style="padding:12px 14px; font-size:12px;">Chunks + Query</div>
+                        <div class="flabel">Most relevant context</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode purple">Prompt</div>
+                        <div class="flabel">Stage 3</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode teal">LLM</div>
+                        <div class="flabel">Stage 4</div>
+                    </div>
+                    <div class="farrow">→</div>
+                    <div>
+                        <div class="fnode green">Response ✅</div>
+                    </div>
+                </div>
+                <div
+                    style="margin-top:14px; padding-top:14px; border-top:1px dashed var(--border); font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace;">
+                    ← Offline: Indexing (Stage 1) feeds the Vector Store that the Retriever queries →
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card top-green">
+                    <h3>✅ What RAG Enables in Generation</h3>
+                    <ul>
+                        <li>LLM answers are <strong>grounded in real documents</strong></li>
+                        <li><strong>Hallucination is dramatically reduced</strong></li>
+                        <li>Answers can <strong>cite specific sources</strong></li>
+                        <li>Works with <strong>private and recent data</strong></li>
+                        <li>No model retraining needed to update knowledge</li>
+                    </ul>
+                </div>
+                <div class="card top-blue">
+                    <h3>🔧 LangChain — Full RAG Chain</h3>
+                    <div class="code-block" style="margin:10px 0;">
+                        <div class="code-header" style="padding:8px 14px;">
+                            <div class="dots">
+                                <div class="dot r"></div>
+                                <div class="dot y"></div>
+                                <div class="dot g"></div>
+                            </div>
+                            <span class="lang-badge" style="font-size:10px;">Python</span>
+                        </div>
+                        <pre style="padding:14px 16px; font-size:12px;"><code><span class="var">rag_chain</span> = (
+  {<span class="str">"context"</span>: <span class="var">retriever</span>,
+   <span class="str">"question"</span>: <span class="cl">RunnablePassthrough</span>()}
+  | <span class="var">rag_prompt</span>
+  | <span class="cl">ChatOpenAI</span>(<span class="var">model</span>=<span class="str">"gpt-4"</span>)
+  | <span class="cl">StrOutputParser</span>()
+)
+
+<span class="var">response</span> = <span class="var">rag_chain</span>.<span class="fn">invoke</span>(
+  <span class="str">"What is photosynthesis?"</span>
+)</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Table -->
+            <h3 style="margin-bottom:16px; margin-top:28px;">All 4 RAG Stages — Summary</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Stage</th>
+                            <th>Name</th>
+                            <th>What Happens</th>
+                            <th>When</th>
+                            <th>Key Tools</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge yellow">01</span></td>
+                            <td><strong>Indexing</strong></td>
+                            <td>Load → Chunk → Embed → Store in vector DB</td>
+                            <td>Offline (once)</td>
+                            <td>PyPDFLoader, RecursiveTextSplitter, OpenAIEmbeddings, FAISS, Chroma</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge blue">02</span></td>
+                            <td><strong>Retrieval</strong></td>
+                            <td>Embed query → Semantic search → Rank → Return top-K chunks</td>
+                            <td>At query time</td>
+                            <td>VectorStoreRetriever, MMR, MultiQueryRetriever</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge purple">03</span></td>
+                            <td><strong>Augmentation</strong></td>
+                            <td>Combine retrieved context + query → enriched prompt</td>
+                            <td>At query time</td>
+                            <td>ChatPromptTemplate, RunnablePassthrough</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge green">04</span></td>
+                            <td><strong>Generation</strong></td>
+                            <td>LLM generates response grounded in context</td>
+                            <td>At query time</td>
+                            <td>ChatOpenAI, Claude, LLaMA, StrOutputParser</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ══════════════ FOOTER ══════════════ -->
+    <footer class="footer">
+        <h2>🤖 What is RAG? — Complete Notes</h2>
+        <p>From LLM limitations and fine-tuning to the full 4-stage RAG pipeline — Indexing, Retrieval, Augmentation,
+            and Generation.</p>
+        <div class="footer-meta">
+            📅 16 April 2025 &nbsp;·&nbsp; 📺 CampusX — Generative AI using LangChain &nbsp;·&nbsp; ⏱ 59:23
+            &nbsp;·&nbsp; 🐍 Python / LangChain
+        </div>
+        <div class="footer-badges">
+            <span class="footer-badge">🦜 LangChain</span>
+            <span class="footer-badge">🤖 OpenAI GPT</span>
+            <span class="footer-badge">🗄️ FAISS / Chroma</span>
+            <span class="footer-badge">📐 RAG Architecture</span>
+            <span class="footer-badge">🎯 In-Context Learning</span>
+            <span class="footer-badge">📘 arXiv: 2005.14165</span>
+        </div>
+    </footer>
+
+</body>
+
+</html>

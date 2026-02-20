@@ -1,0 +1,2041 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retrievers in LangChain — Study Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Reading/Notes Mode Colors */
+            --bg: #fdfaf6;
+            /* Soft beige/off-white background */
+            --bg2: #f5f0e6;
+            /* Slightly darker beige for cards/toc */
+            --bg3: #eee8dc;
+            /* Even darker beige for borders/code headers */
+            --accent: #1e88e5;
+            /* Softer blue */
+            --accent2: #e53935;
+            /* Softer red */
+            --accent3: #43a047;
+            /* Softer green */
+            --accent4: #fb8c00;
+            /* Softer orange */
+            --accent5: #5e35b1;
+            /* Softer purple */
+            --accent6: #00897b;
+            /* Softer teal */
+            --accent7: #f4511e;
+            /* Deep orange */
+            --accent8: #d81b60;
+            /* Softer pink */
+            --text: #3e3a35;
+            /* Soft dark brown/grey instead of harsh black */
+            --text-heading: #2c2925;
+            --muted: #797165;
+            /* Soft brownish grey */
+            --border: #e2d9cd;
+            /* Warm border color */
+            --card-shadow: 0 4px 16px rgba(90, 80, 70, 0.05);
+            --radius: 12px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Lora', Georgia, serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.75;
+            font-size: 16px;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            background: linear-gradient(135deg, #f5f0e6 0%, #e8e2d5 40%, #fdfaf6 100%);
+            border-bottom: 3px solid var(--accent);
+            padding: 72px 24px 56px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(34, 139, 230, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -40px;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(121, 80, 242, 0.10) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .series-tag {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: var(--accent);
+            color: #fff;
+            padding: 5px 16px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.6rem);
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1.15;
+            margin-bottom: 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 span {
+            color: var(--accent);
+            background: linear-gradient(120deg, var(--accent) 0%, var(--accent5) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: #495057;
+            max-width: 650px;
+            margin: 0 auto 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .meta-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1.5px solid;
+        }
+
+        .pill.blue {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(34, 139, 230, 0.07);
+        }
+
+        .pill.red {
+            border-color: var(--accent2);
+            color: var(--accent2);
+            background: rgba(250, 82, 82, 0.07);
+        }
+
+        .pill.green {
+            border-color: var(--accent3);
+            color: var(--accent3);
+            background: rgba(64, 192, 87, 0.07);
+        }
+
+        .pill.yellow {
+            border-color: var(--accent4);
+            color: #c08900;
+            background: rgba(250, 176, 5, 0.07);
+        }
+
+        .pill.purple {
+            border-color: var(--accent5);
+            color: var(--accent5);
+            background: rgba(121, 80, 242, 0.07);
+        }
+
+        /* ── TOC ── */
+        .toc {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .toc-inner {
+            display: flex;
+            gap: 4px;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 10px 0;
+        }
+
+        .toc a {
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .toc a:hover {
+            background: var(--bg2);
+            color: var(--accent);
+        }
+
+        /* ── CONTAINER ── */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        /* ── MODULE HEADER ── */
+        .module-header {
+            border-left: 5px solid var(--accent);
+            padding: 20px 24px;
+            background: var(--bg2);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            margin-bottom: 56px;
+        }
+
+        .module-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+
+        .module-header p {
+            color: var(--muted);
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── SECTION HEADERS ── */
+        .section {
+            margin-bottom: 72px;
+            scroll-margin-top: 64px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--bg3);
+        }
+
+        .section-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            background: var(--accent);
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .section-num.red {
+            background: var(--accent2);
+        }
+
+        .section-num.green {
+            background: var(--accent3);
+        }
+
+        .section-num.yellow {
+            background: var(--accent4);
+            color: #333;
+        }
+
+        .section-num.purple {
+            background: var(--accent5);
+        }
+
+        .section-num.teal {
+            background: #0ca678;
+        }
+
+        .section-num.orange {
+            background: #f76707;
+        }
+
+        .section-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+        }
+
+        .card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .card h3 .icon {
+            margin-right: 8px;
+        }
+
+        .card p,
+        .card li {
+            font-size: 15px;
+            color: #495057;
+        }
+
+        .card ul {
+            padding-left: 18px;
+        }
+
+        .card ul li {
+            margin-bottom: 4px;
+        }
+
+        .card.accent-blue {
+            border-top: 3px solid var(--accent);
+        }
+
+        .card.accent-red {
+            border-top: 3px solid var(--accent2);
+        }
+
+        .card.accent-green {
+            border-top: 3px solid var(--accent3);
+        }
+
+        .card.accent-yellow {
+            border-top: 3px solid var(--accent4);
+        }
+
+        .card.accent-purple {
+            border-top: 3px solid var(--accent5);
+        }
+
+        .card.accent-teal {
+            border-top: 3px solid #0ca678;
+        }
+
+        .card.accent-orange {
+            border-top: 3px solid #f76707;
+        }
+
+        /* ── GRIDS ── */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        /* ── INFO BOXES ── */
+        .info-box {
+            border-left: 4px solid var(--accent);
+            background: rgba(34, 139, 230, 0.06);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            padding: 16px 20px;
+            margin: 20px 0;
+            font-size: 15px;
+        }
+
+        .info-box strong {
+            color: var(--accent);
+            font-family: 'Syne', sans-serif;
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-box.green {
+            border-color: var(--accent3);
+            background: rgba(64, 192, 87, 0.07);
+        }
+
+        .info-box.green strong {
+            color: var(--accent3);
+        }
+
+        .info-box.orange {
+            border-color: var(--accent4);
+            background: rgba(250, 176, 5, 0.08);
+        }
+
+        .info-box.orange strong {
+            color: #c08900;
+        }
+
+        .info-box.red {
+            border-color: var(--accent2);
+            background: rgba(250, 82, 82, 0.07);
+        }
+
+        .info-box.red strong {
+            color: var(--accent2);
+        }
+
+        .info-box.purple {
+            border-color: var(--accent5);
+            background: rgba(121, 80, 242, 0.07);
+        }
+
+        .info-box.purple strong {
+            color: var(--accent5);
+        }
+
+        /* ── CODE BLOCKS ── */
+        .code-block {
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 20px 0;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #2d2d2d;
+        }
+
+        .code-header {
+            background: #1e1e2e;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .code-header .lang-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: #cdd6f4;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .code-header .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .code-header .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .code-header .dot.r {
+            background: #ff5f57;
+        }
+
+        .code-header .dot.y {
+            background: #febc2e;
+        }
+
+        .code-header .dot.g {
+            background: #28c840;
+        }
+
+        pre {
+            background: #1e1e2e;
+            padding: 20px 22px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: #cdd6f4;
+        }
+
+        .kw {
+            color: #cba6f7;
+        }
+
+        /* keywords */
+        .fn {
+            color: #89dceb;
+        }
+
+        /* functions */
+        .str {
+            color: #a6e3a1;
+        }
+
+        /* strings */
+        .cm {
+            color: #6c7086;
+            font-style: italic;
+        }
+
+        /* comments */
+        .cl {
+            color: #f9e2af;
+        }
+
+        /* class names */
+        .num {
+            color: #fab387;
+        }
+
+        /* numbers */
+        .var {
+            color: #89b4fa;
+        }
+
+        /* variables */
+
+        /* ── STEPS ── */
+        .steps {
+            margin: 20px 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 18px;
+            align-items: flex-start;
+        }
+
+        .step-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            background: var(--accent);
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .step-content h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 14px;
+            color: #495057;
+        }
+
+        /* ── TABLES ── */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead th {
+            background: var(--bg3);
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+            letter-spacing: 0.5px;
+        }
+
+        tbody td {
+            padding: 11px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: var(--bg2);
+        }
+
+        .badge {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+
+        .badge.blue {
+            background: rgba(34, 139, 230, 0.12);
+            color: var(--accent);
+        }
+
+        .badge.green {
+            background: rgba(64, 192, 87, 0.12);
+            color: #2b9c4a;
+        }
+
+        .badge.red {
+            background: rgba(250, 82, 82, 0.12);
+            color: #d93025;
+        }
+
+        .badge.yellow {
+            background: rgba(250, 176, 5, 0.12);
+            color: #c08900;
+        }
+
+        .badge.purple {
+            background: rgba(121, 80, 242, 0.12);
+            color: var(--accent5);
+        }
+
+        /* ── DIAGRAM / FLOW ── */
+        .flow-diagram {
+            background: var(--bg2);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 30px 24px;
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 16px;
+            margin: 12px 0;
+        }
+
+        .flow-node {
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+
+        .flow-node.blue {
+            border-color: var(--accent);
+            background: rgba(34, 139, 230, 0.1);
+            color: var(--accent);
+        }
+
+        .flow-node.green {
+            border-color: var(--accent3);
+            background: rgba(64, 192, 87, 0.1);
+            color: #2b9c4a;
+        }
+
+        .flow-node.yellow {
+            border-color: var(--accent4);
+            background: rgba(250, 176, 5, 0.1);
+            color: #c08900;
+        }
+
+        .flow-node.red {
+            border-color: var(--accent2);
+            background: rgba(250, 82, 82, 0.1);
+            color: var(--accent2);
+        }
+
+        .flow-node.purple {
+            border-color: var(--accent5);
+            background: rgba(121, 80, 242, 0.1);
+            color: var(--accent5);
+        }
+
+        .flow-node.teal {
+            border-color: #0ca678;
+            background: rgba(12, 166, 120, 0.1);
+            color: #0ca678;
+        }
+
+        .flow-node.circle {
+            width: 80px;
+            height: 80px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .flow-arrow {
+            color: var(--muted);
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 28px;
+            /* Aligns with middle of 80px nodes */
+            user-select: none;
+        }
+
+        .flow-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        /* ── ANALOGY BOX ── */
+        .analogy {
+            background: linear-gradient(135deg, #fff9db, #fff3cd);
+            border: 1.5px solid var(--accent4);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .analogy::before {
+            content: '💡';
+            position: absolute;
+            top: -14px;
+            left: 20px;
+            font-size: 24px;
+            background: #fff;
+            padding: 0 6px;
+            border-radius: 50%;
+        }
+
+        .analogy-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #c08900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .analogy p {
+            font-size: 15px;
+            color: #664d03;
+        }
+
+        /* ── HIGHLIGHT TAG ── */
+        .hl {
+            background: rgba(34, 139, 230, 0.12);
+            color: var(--accent);
+            padding: 1px 7px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .hl.green {
+            background: rgba(64, 192, 87, 0.12);
+            color: #2b9c4a;
+        }
+
+        .hl.red {
+            background: rgba(250, 82, 82, 0.12);
+            color: #d93025;
+        }
+
+        .hl.yellow {
+            background: rgba(250, 176, 5, 0.12);
+            color: #c08900;
+        }
+
+        .hl.purple {
+            background: rgba(121, 80, 242, 0.12);
+            color: var(--accent5);
+        }
+
+        /* ── RETRIEVER CARD GRID (section 8) ── */
+        .retriever-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .ret-card {
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            border: 1.5px solid var(--border);
+            background: var(--bg);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s;
+        }
+
+        .ret-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .ret-card .ret-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .ret-card p {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* ── COMPARISON TABLE ── */
+        .compare-row-yes {
+            color: var(--accent3);
+            font-weight: 700;
+        }
+
+        .compare-row-no {
+            color: var(--accent2);
+        }
+
+        /* ── FOOTER ── */
+        .footer {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 48px 24px 36px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .footer p {
+            color: #9399b2;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .footer-meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #6c7086;
+            margin-bottom: 24px;
+        }
+
+        .footer-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .footer-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #cdd6f4;
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        /* ── UTILS ── */
+        p {
+            margin-bottom: 14px;
+        }
+
+        strong {
+            font-weight: 700;
+        }
+
+        ul,
+        ol {
+            padding-left: 22px;
+            margin-bottom: 14px;
+        }
+
+        li {
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+
+        h3 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .mb-12 {
+            margin-bottom: 12px;
+        }
+
+        .mb-24 {
+            margin-bottom: 24px;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .text-muted {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        @media (max-width: 640px) {
+
+            .grid-2,
+            .grid-3,
+            .grid-4,
+            .retriever-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-row {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+
+            pre {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ═══════════════ HERO ═══════════════ -->
+    <section class="hero">
+        <div class="container" style="padding: 0;">
+            <div class="series-tag">Day 5 Notes · Generative AI · LangChain</div>
+            <h1>Retrievers in <span>LangChain</span></h1>
+            <p>A complete technical deep-dive into LangChain retrievers — from basic concepts to advanced strategies
+                like
+                MMR, Multi-Query, and Contextual Compression.</p>
+            <div class="meta-pills">
+                <span class="pill blue">📚 8 Topics</span>
+                <span class="pill green">🐍 Python Code</span>
+                <span class="pill red">🔍 RAG Pipelines</span>
+                <span class="pill yellow">⚡ Vector Search</span>
+                <span class="pill purple">🧠 LLM-Powered</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════ TOC ═══════════════ -->
+    <nav class="toc">
+        <div class="toc-inner">
+            <a href="#s1">39 · What are Retrievers</a>
+            <a href="#s2">40 · Types</a>
+            <a href="#s3">41 · Wikipedia</a>
+            <a href="#s4">42 · Vector Store</a>
+            <a href="#s5">43 · MMR</a>
+            <a href="#s6">44 · Multi-Query</a>
+            <a href="#s7">45 · Contextual Compression</a>
+            <a href="#s8">46 · More Retrievers</a>
+        </div>
+    </nav>
+
+    <!-- ═══════════════ MAIN ═══════════════ -->
+    <div class="container">
+
+        <!-- MODULE HEADER -->
+        <div class="module-header">
+            <h2>Module 8: Retrievers</h2>
+            <p>Course: Generative AI using LangChain · CampusX · Dated: 10 April 2025</p>
+        </div>
+
+        <!-- ──────────────────────────────────────
+       SECTION 1 — WHAT ARE RETRIEVERS
+  ────────────────────────────────────── -->
+        <section class="section" id="s1">
+            <div class="section-header">
+                <span class="section-num">39</span>
+                <h2>What are Retrievers?</h2>
+            </div>
+
+            <div class="info-box">
+                <strong>📌 Core Definition</strong>
+                A <strong>retriever</strong> is a component in LangChain that fetches <strong>relevant
+                    documents</strong> from a <em>data source</em> in response to a user's query. All retrievers in
+                LangChain are <strong>Runnables</strong> — they follow the standard <code>.invoke(query)</code>
+                interface.
+            </div>
+
+            <div class="analogy">
+                <div class="analogy-title">Real-World Analogy</div>
+                <p>Think of a retriever like a <strong>librarian</strong>. You walk in and say "I need books about
+                    climate change." The librarian (retriever) knows the entire library (data source), searches
+                    intelligently, and hands you only the most relevant books (documents) — not the whole library.</p>
+            </div>
+
+            <!-- Architecture Diagram -->
+            <div class="flow-diagram">
+                <p
+                    style="font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:20px; color:var(--muted);">
+                    RETRIEVER ARCHITECTURE</p>
+                <div class="flow-row">
+                    <div>
+                        <div class="flow-node yellow circle">Data<br>Source</div>
+                        <div class="flow-label">Wikipedia / Vector Store / API</div>
+                    </div>
+                    <div class="flow-arrow">⇄</div>
+                    <div>
+                        <div class="flow-node blue">Retriever</div>
+                        <div class="flow-label">Core Component</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div>
+                        <div class="flow-node green">Documents</div>
+                        <div class="flow-label">List[Document]</div>
+                    </div>
+                </div>
+                <div class="flow-row" style="margin-top:16px;">
+                    <div class="flow-arrow" style="transform:rotate(90deg); color:var(--accent);">↑</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-node red">Query</div>
+                </div>
+                <div class="flow-label" style="margin-top:4px;">User's natural language question</div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card accent-blue">
+                    <h3><span class="icon">🔧</span>Key Properties</h3>
+                    <ul>
+                        <li>Fetches <strong>relevant</strong> documents, not all documents</li>
+                        <li>Responds to a <strong>user query</strong> (string input)</li>
+                        <li>Returns a <strong>list of Document objects</strong></li>
+                        <li>All retrievers are <strong>LangChain Runnables</strong></li>
+                        <li>Use <span class="hl">.invoke(query)</span> to call any retriever</li>
+                    </ul>
+                </div>
+                <div class="card accent-green">
+                    <h3><span class="icon">⚙️</span>How it Works (Internally)</h3>
+                    <ul>
+                        <li>Accepts a <strong>string query</strong> as input</li>
+                        <li>Runs a <strong>function (fxn)</strong> against the data source</li>
+                        <li>Returns <strong>multiple Document objects</strong></li>
+                        <li>Each Document has <code>page_content</code> + <code>metadata</code></li>
+                    </ul>
+                    <div class="info-box green" style="margin-top:12px; padding:10px 14px;">
+                        <strong>Runnable Interface</strong>
+                        <code style="font-size:13px;">query → fxn → List[Document]</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ──────────────────────────────────────
+       SECTION 2 — TYPES OF RETRIEVERS
+  ────────────────────────────────────── -->
+        <section class="section" id="s2">
+            <div class="section-header">
+                <span class="section-num red">40</span>
+                <h2>Types of Retrievers</h2>
+            </div>
+
+            <p>LangChain offers two main <strong>dimensions</strong> for classifying retrievers: by <strong>Data
+                    Source</strong> (where data comes from) and by <strong>Search Strategy</strong> (how results are
+                selected).</p>
+
+            <div class="grid-2 mb-24">
+                <div class="card accent-red">
+                    <h3>📂 By Data Source</h3>
+                    <ul>
+                        <li><strong>Wikipedia Retriever</strong> — Pulls from Wikipedia API</li>
+                        <li><strong>Vector Store Retriever</strong> — Uses embedded document vectors (Chroma, FAISS)
+                        </li>
+                        <li><strong>ArXiv Retriever</strong> — Fetches academic research papers</li>
+                    </ul>
+                </div>
+                <div class="card accent-purple">
+                    <h3>🔍 By Search Strategy</h3>
+                    <ul>
+                        <li><strong>MMR</strong> (Maximal Marginal Relevance) — Diverse, non-redundant results</li>
+                        <li><strong>Multi-Query</strong> — LLM rewrites your query multiple ways</li>
+                        <li><strong>Contextual Compression</strong> — Compresses docs to only relevant content</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Retriever</th>
+                            <th>Data Source</th>
+                            <th>Search Strategy</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="hl">WikipediaRetriever</span></td>
+                            <td>Wikipedia API</td>
+                            <td>Keyword / Semantic</td>
+                            <td>General knowledge queries</td>
+                        </tr>
+                        <tr>
+                            <td><span class="hl">VectorStoreRetriever</span></td>
+                            <td>Local Vector DB</td>
+                            <td>Cosine Similarity</td>
+                            <td>Custom document collections</td>
+                        </tr>
+                        <tr>
+                            <td><span class="hl">MMR Retriever</span></td>
+                            <td>Vector Store</td>
+                            <td>Marginal Relevance</td>
+                            <td>Diverse, non-redundant results</td>
+                        </tr>
+                        <tr>
+                            <td><span class="hl">MultiQueryRetriever</span></td>
+                            <td>Vector Store</td>
+                            <td>LLM re-writing + Multi-search</td>
+                            <td>Ambiguous or broad queries</td>
+                        </tr>
+                        <tr>
+                            <td><span class="hl">ContextualCompression</span></td>
+                            <td>Any base retriever</td>
+                            <td>LLM-based compression</td>
+                            <td>Long, mixed-content docs</td>
+                        </tr>
+                        <tr>
+                            <td><span class="hl">ArxivRetriever</span></td>
+                            <td>ArXiv API</td>
+                            <td>Keyword Search</td>
+                            <td>Academic/research papers</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ──────────────────────────────────────
+       SECTION 3 — WIKIPEDIA RETRIEVER
+  ────────────────────────────────────── -->
+        <section class="section" id="s3">
+            <div class="section-header">
+                <span class="section-num green">41</span>
+                <h2>Wikipedia Retriever</h2>
+            </div>
+
+            <div class="info-box green">
+                <strong>📖 Definition</strong>
+                A <strong>Wikipedia Retriever</strong> queries the <strong>Wikipedia API</strong> to fetch relevant
+                content for a given query. It requires no local document setup — the data source is Wikipedia itself.
+            </div>
+
+            <!-- Flow -->
+            <div class="flow-diagram">
+                <p
+                    style="font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:20px; color:var(--muted);">
+                    WIKIPEDIA RETRIEVER FLOW</p>
+                <div class="flow-row">
+                    <div class="flow-node red">ipl / Query</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node blue">Wikipedia API</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node green">Document Objects</div>
+                </div>
+            </div>
+
+            <h3 style="font-family:'Syne',sans-serif; margin-bottom:16px;">How It Works</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h4>Receive a Query</h4>
+                        <p>You pass a natural language string e.g. <span class="hl">"Albert Einstein"</span> or <span
+                                class="hl">"Geopolitical history of India and Pakistan"</span></p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h4>Send to Wikipedia's API</h4>
+                        <p>The retriever forwards the query to Wikipedia's search API using the <span
+                                class="hl">wikipedia</span> Python package under the hood.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h4>Retrieve Most Relevant Articles</h4>
+                        <p>Wikipedia returns the top-k most relevant articles (controlled by <span
+                                class="hl">top_k_results</span> parameter).</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <h4>Return as LangChain Document Objects</h4>
+                        <p>Each article is wrapped in a LangChain <span class="hl">Document</span> with
+                            <code>page_content</code> (article text) and <code>metadata</code>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="dots">
+                        <div class="dot r"></div>
+                        <div class="dot y"></div>
+                        <div class="dot g"></div>
+                    </div>
+                    <span class="lang-badge">Python</span>
+                </div>
+                <pre><code><span class="cm"># Install: pip install wikipedia langchain-community</span>
+<span class="kw">from</span> <span class="var">langchain_community.retrievers</span> <span class="kw">import</span> <span class="cl">WikipediaRetriever</span>
+
+<span class="cm"># Initialize retriever with top_k and language</span>
+<span class="var">retriever</span> = <span class="cl">WikipediaRetriever</span>(
+    <span class="var">top_k_results</span>=<span class="num">2</span>,
+    <span class="var">lang</span>=<span class="str">"en"</span>
+)
+
+<span class="cm"># Define your query</span>
+<span class="var">query</span> = <span class="str">"the geopolitical history of india and pakistan from the perspective of a chinese"</span>
+
+<span class="cm"># Get relevant Wikipedia documents</span>
+<span class="var">docs</span> = <span class="var">retriever</span>.<span class="fn">invoke</span>(<span class="var">query</span>)
+
+<span class="cm"># Print retrieved content</span>
+<span class="kw">for</span> <span class="var">i</span>, <span class="var">doc</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="var">docs</span>):
+    <span class="fn">print</span>(<span class="str">f"\n--- Result {<span class="var">i</span>+1} ---"</span>)
+    <span class="fn">print</span>(<span class="str">f"Content:\n{<span class="var">doc</span>.page_content}..."</span>)  <span class="cm"># truncate for display</span></code></pre>
+            </div>
+
+            <div class="info-box orange">
+                <strong>⚠️ Note</strong>
+                The <span class="hl">top_k_results</span> parameter controls how many Wikipedia articles are fetched.
+                Setting it too high may slow down your pipeline or exceed context limits. Start with 2–3.
+            </div>
+        </section>
+
+        <!-- ──────────────────────────────────────
+       SECTION 4 — VECTOR STORE RETRIEVER
+  ────────────────────────────────────── -->
+        <section class="section" id="s4">
+            <div class="section-header">
+                <span class="section-num yellow">42</span>
+                <h2>Vector Store Retriever</h2>
+            </div>
+
+            <p>The most common retriever in RAG (Retrieval-Augmented Generation) pipelines. It converts your documents
+                into numerical vectors (embeddings) and stores them in a vector database, enabling fast semantic
+                similarity search.</p>
+
+            <div class="analogy">
+                <div class="analogy-title">Real-World Analogy</div>
+                <p>Think of embeddings as <strong>GPS coordinates for meaning</strong>. Documents about similar topics
+                    get coordinates that are geographically close. When you query, the vector store finds documents
+                    whose "meaning coordinates" are nearest to your query's coordinates.</p>
+            </div>
+
+            <!-- 4-step flow diagram -->
+            <div class="flow-diagram">
+                <p
+                    style="font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:20px; color:var(--muted);">
+                    VECTOR STORE RETRIEVER — SETUP PIPELINE</p>
+                <div class="flow-row">
+                    <div>
+                        <div class="flow-node blue">Documents</div>
+                        <div class="flow-label">Step 1: Your docs</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div>
+                        <div class="flow-node purple">Embedding<br>Model</div>
+                        <div class="flow-label">Step 2: OpenAI</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div>
+                        <div class="flow-node teal">Vector Store</div>
+                        <div class="flow-label">Step 3: Chroma/FAISS</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div>
+                        <div class="flow-node green">Retriever</div>
+                        <div class="flow-label">Step 4: .as_retriever()</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="dots">
+                        <div class="dot r"></div>
+                        <div class="dot y"></div>
+                        <div class="dot g"></div>
+                    </div>
+                    <span class="lang-badge">Python</span>
+                </div>
+                <pre><code><span class="kw">from</span> <span class="var">langchain_community.vectorstores</span> <span class="kw">import</span> <span class="cl">Chroma</span>
+<span class="kw">from</span> <span class="var">langchain_openai</span> <span class="kw">import</span> <span class="cl">OpenAIEmbeddings</span>
+<span class="kw">from</span> <span class="var">langchain_core.documents</span> <span class="kw">import</span> <span class="cl">Document</span>
+
+<span class="cm"># Step 1: Your source documents</span>
+<span class="var">documents</span> = [
+    <span class="cl">Document</span>(<span class="var">page_content</span>=<span class="str">"LangChain helps developers build LLM applications easily."</span>),
+    <span class="cl">Document</span>(<span class="var">page_content</span>=<span class="str">"Chroma is a vector database optimized for LLM-based search."</span>),
+    <span class="cl">Document</span>(<span class="var">page_content</span>=<span class="str">"Embeddings convert text into high-dimensional vectors."</span>),
+    <span class="cl">Document</span>(<span class="var">page_content</span>=<span class="str">"OpenAI provides powerful embedding models."</span>),
+]
+
+<span class="cm"># Step 2: Initialize embedding model</span>
+<span class="var">embedding_model</span> = <span class="cl">OpenAIEmbeddings</span>()
+
+<span class="cm"># Step 3: Create Chroma vector store in memory</span>
+<span class="var">vectorstore</span> = <span class="cl">Chroma</span>.<span class="fn">from_documents</span>(
+    <span class="var">documents</span>=<span class="var">documents</span>,
+    <span class="var">embedding</span>=<span class="var">embedding_model</span>,
+    <span class="var">collection_name</span>=<span class="str">"my_collection"</span>
+)
+
+<span class="cm"># Step 4: Convert vectorstore into a retriever</span>
+<span class="var">retriever</span> = <span class="var">vectorstore</span>.<span class="fn">as_retriever</span>(<span class="var">search_kwargs</span>={<span class="str">"k"</span>: <span class="num">2</span>})
+
+<span class="cm"># Query the retriever</span>
+<span class="var">query</span> = <span class="str">"What is Chroma used for?"</span>
+<span class="var">results</span> = <span class="var">retriever</span>.<span class="fn">invoke</span>(<span class="var">query</span>)
+
+<span class="kw">for</span> <span class="var">i</span>, <span class="var">doc</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="var">results</span>):
+    <span class="fn">print</span>(<span class="str">f"\n--- Result {<span class="var">i</span>+1} ---"</span>)
+    <span class="fn">print</span>(<span class="var">doc</span>.page_content)</code></pre>
+            </div>
+
+            <div class="grid-2">
+                <div class="card accent-teal">
+                    <h3>⚙️ Key Parameters</h3>
+                    <ul>
+                        <li><span class="hl">k</span> — Number of docs to retrieve (default: 4)</li>
+                        <li><span class="hl">search_type</span> — <code>"similarity"</code> or <code>"mmr"</code></li>
+                        <li><span class="hl">collection_name</span> — Name of the Chroma collection</li>
+                        <li><span class="hl">embedding</span> — Embedding model to use</li>
+                    </ul>
+                </div>
+                <div class="card accent-yellow">
+                    <h3>📦 Popular Vector Stores</h3>
+                    <ul>
+                        <li><strong>Chroma</strong> — Lightweight, in-memory, easy to use</li>
+                        <li><strong>FAISS</strong> — Facebook's fast similarity search, great for large datasets</li>
+                        <li><strong>Pinecone</strong> — Managed cloud vector DB</li>
+                        <li><strong>Weaviate</strong> — Open-source, multi-modal support</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ──────────────────────────────────────
+       SECTION 5 — MMR
+  ────────────────────────────────────── -->
+        <section class="section" id="s5">
+            <div class="section-header">
+                <span class="section-num purple">43</span>
+                <h2>Maximal Marginal Relevance (MMR)</h2>
+            </div>
+
+            <div class="info-box purple">
+                <strong>🔮 Core Idea</strong>
+                MMR is an information retrieval algorithm designed to <strong>reduce redundancy</strong> in retrieved
+                results while <strong>maintaining high relevance</strong> to the query. It answers: <em>"How can we pick
+                    results that are not only relevant to the query but also different from each other?"</em>
+            </div>
+
+            <h3 style="margin-bottom:16px;">Why Do We Need MMR?</h3>
+            <div class="grid-2 mb-24">
+                <div class="card accent-red">
+                    <h3>❌ Problem: Regular Similarity Search</h3>
+                    <ul>
+                        <li>Results are all very <strong>similar to each other</strong></li>
+                        <li>Repeating the same information</li>
+                        <li>Lacking <strong>diverse perspectives</strong></li>
+                        <li>Wastes context window with redundant content</li>
+                    </ul>
+                </div>
+                <div class="card accent-green">
+                    <h3>✅ MMR Solution</h3>
+                    <ul>
+                        <li>Picks the <strong>most relevant document</strong> first</li>
+                        <li>Then picks the next most relevant <strong>AND least similar</strong> to already selected
+                            docs</li>
+                        <li>Continues until k documents are selected</li>
+                        <li>Result: <strong>diverse but still relevant</strong> document set</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Visual Example -->
+            <div class="card accent-purple mb-24">
+                <h3>🌍 Visual Example — Climate Change Query</h3>
+                <div class="table-wrap" style="margin-top:14px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Doc ID</th>
+                                <th>Content</th>
+                                <th>Regular Top-3</th>
+                                <th>MMR Top-3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="hl">D1</span></td>
+                                <td>"Climate change is causing glaciers to melt rapidly in the Arctic region."</td>
+                                <td class="compare-row-yes">✓ Selected</td>
+                                <td class="compare-row-yes">✓ Selected</td>
+                            </tr>
+                            <tr>
+                                <td><span class="hl">D2</span></td>
+                                <td>"Glaciers in the Arctic are melting at an alarming rate due to rising temperatures."
+                                </td>
+                                <td class="compare-row-yes">✓ Selected</td>
+                                <td class="compare-row-no">✗ Too Similar to D1</td>
+                            </tr>
+                            <tr>
+                                <td><span class="hl">D3</span></td>
+                                <td>"Deforestation in the Amazon is accelerating global climate change."</td>
+                                <td class="compare-row-yes">✓ Selected</td>
+                                <td class="compare-row-no">✗ Skipped</td>
+                            </tr>
+                            <tr>
+                                <td><span class="hl">D4</span></td>
+                                <td>"Climate change is increasing the frequency of wildfires in California."</td>
+                                <td class="compare-row-no">✗ Not selected</td>
+                                <td class="compare-row-yes">✓ Diverse topic</td>
+                            </tr>
+                            <tr>
+                                <td><span class="hl">D5</span></td>
+                                <td>"Rising sea levels due to climate change threaten coastal cities."</td>
+                                <td class="compare-row-no">✗ Not selected</td>
+                                <td class="compare-row-yes">✓ Different angle</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="dots">
+                        <div class="dot r"></div>
+                        <div class="dot y"></div>
+                        <div class="dot g"></div>
+                    </div>
+                    <span class="lang-badge">Python — MMR with FAISS</span>
+                </div>
+                <pre><code><span class="kw">from</span> <span class="var">langchain_community.vectorstores</span> <span class="kw">import</span> <span class="cl">FAISS</span>
+
+<span class="cm"># Initialize embeddings & create FAISS vector store</span>
+<span class="var">embedding_model</span> = <span class="cl">OpenAIEmbeddings</span>()
+<span class="var">vectorstore</span> = <span class="cl">FAISS</span>.<span class="fn">from_documents</span>(
+    <span class="var">documents</span>=<span class="var">docs</span>,
+    <span class="var">embedding</span>=<span class="var">embedding_model</span>
+)
+
+<span class="cm"># Enable MMR in the retriever</span>
+<span class="var">retriever</span> = <span class="var">vectorstore</span>.<span class="fn">as_retriever</span>(
+    <span class="var">search_type</span>=<span class="str">"mmr"</span>,              <span class="cm"># &lt;-- This enables MMR</span>
+    <span class="var">search_kwargs</span>={
+        <span class="str">"k"</span>: <span class="num">3</span>,                    <span class="cm"># Top results to return</span>
+        <span class="str">"lambda_mult"</span>: <span class="num">1</span>          <span class="cm"># Relevance-diversity balance</span>
+    }
+)
+
+<span class="var">query</span> = <span class="str">"What is langchain?"</span>
+<span class="var">results</span> = <span class="var">retriever</span>.<span class="fn">invoke</span>(<span class="var">query</span>)</code></pre>
+            </div>
+
+            <div class="info-box orange">
+                <strong>🎛️ lambda_mult Parameter</strong>
+                <span class="hl">lambda_mult=1</span> → Full relevance (like standard similarity search) &nbsp;|&nbsp;
+                <span class="hl">lambda_mult=0</span> → Maximum diversity &nbsp;|&nbsp;
+                <span class="hl">lambda_mult=0.5</span> → Balanced (recommended default)
+            </div>
+        </section>
+
+        <!-- ──────────────────────────────────────
+       SECTION 6 — MULTI-QUERY RETRIEVER
+  ────────────────────────────────────── -->
+        <section class="section" id="s6">
+            <div class="section-header">
+                <span class="section-num teal">44</span>
+                <h2>Multi-Query Retriever</h2>
+            </div>
+
+            <div class="info-box">
+                <strong>🔍 Core Problem Solved</strong>
+                Sometimes a single query might not capture all the ways information is phrased in your documents. A
+                simple similarity search might <strong>miss documents</strong> that talk about those things but don't
+                use the exact same words as your query.
+            </div>
+
+            <div class="analogy">
+                <div class="analogy-title">Real-World Analogy</div>
+                <p>Imagine asking a librarian "How can I stay healthy?" — but all the best books use terms like
+                    <em>"nutrition," "fitness routines,"</em> and <em>"stress management."</em> A smart librarian would
+                    search for <strong>all related phrasings</strong>, not just the literal words you said. That's
+                    Multi-Query.
+                </p>
+            </div>
+
+            <div class="grid-2 mb-24">
+                <div class="card accent-red">
+                    <h3>❓ Original Query</h3>
+                    <p style="font-size:1.2rem; margin:10px 0;">"How can I stay healthy?"</p>
+                    <p style="font-size:13px; color:var(--muted);">Could mean:</p>
+                    <ul>
+                        <li>What should I eat? ✓</li>
+                        <li>How often should I exercise? ✓</li>
+                        <li>How can I manage stress? ✓</li>
+                    </ul>
+                </div>
+                <div class="card accent-blue">
+                    <h3>🤖 LLM-Generated Sub-Queries</h3>
+                    <ol style="font-size:14px;">
+                        <li>"What are the best foods to maintain good health?"</li>
+                        <li>"How often should I exercise to stay fit?"</li>
+                        <li>"What lifestyle habits improve mental and physical wellness?"</li>
+                        <li>"How can I boost my immune system naturally?"</li>
+                        <li>"What daily routines support long-term health?"</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Architecture Diagram -->
+            <div class="flow-diagram mb-24">
+                <p
+                    style="font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:24px; color:var(--muted);">
+                    MULTI-QUERY RETRIEVER ARCHITECTURE</p>
+                <div class="flow-row">
+                    <div class="flow-node red">query</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node purple">LLM</div>
+                    <div class="flow-arrow">→</div>
+                    <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);">q1
+                                →</span>
+                            <div class="flow-node blue" style="padding:6px 12px; font-size:12px;">Retriever</div>
+                            <div class="flow-arrow" style="font-size:14px;">→</div>
+                            <div class="flow-node teal" style="padding:6px 12px; font-size:12px;">5 docs</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);">q2
+                                →</span>
+                            <div class="flow-node blue" style="padding:6px 12px; font-size:12px;">Retriever</div>
+                            <div class="flow-arrow" style="font-size:14px;">→</div>
+                            <div class="flow-node teal" style="padding:6px 12px; font-size:12px;">5 docs</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);">q3
+                                →</span>
+                            <div class="flow-node blue" style="padding:6px 12px; font-size:12px;">Retriever</div>
+                            <div class="flow-arrow" style="font-size:14px;">→</div>
+                            <div class="flow-node teal" style="padding:6px 12px; font-size:12px;">5 docs</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div>
+                        <div class="flow-node green">Deduplicated<br>Results</div>
+                        <div class="flow-label">Union of all docs</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:16px;">How It Works — Step by Step</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h4>Takes Your Original Query</h4>
+                        <p>Your single natural language query is passed to the retriever.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h4>Uses an LLM to Generate Sub-Queries</h4>
+                        <p>An LLM (e.g., GPT-3.5) generates multiple <strong>semantically different versions</strong> of
+                            your query.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h4>Performs Retrieval for Each Sub-Query</h4>
+                        <p>Each generated sub-query is sent to the underlying vector store retriever independently.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <h4>Combines and Deduplicates the Results</h4>
+                        <p>All retrieved documents are merged into a single list, with duplicates removed.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="dots">
+                        <div class="dot r"></div>
+                        <div class="dot y"></div>
+                        <div class="dot g"></div>
+                    </div>
+                    <span class="lang-badge">Python — MultiQueryRetriever</span>
+                </div>
+                <pre><code><span class="kw">from</span> <span class="var">langchain.retrievers.multi_query</span> <span class="kw">import</span> <span class="cl">MultiQueryRetriever</span>
+<span class="kw">from</span> <span class="var">langchain_openai</span> <span class="kw">import</span> <span class="cl">ChatOpenAI</span>
+<span class="kw">from</span> <span class="var">langchain_community.vectorstores</span> <span class="kw">import</span> <span class="cl">FAISS</span>
+
+<span class="cm"># Create base similarity retriever</span>
+<span class="var">similarity_retriever</span> = <span class="var">vectorstore</span>.<span class="fn">as_retriever</span>(
+    <span class="var">search_type</span>=<span class="str">"similarity"</span>,
+    <span class="var">search_kwargs</span>={<span class="str">"k"</span>: <span class="num">5</span>}
+)
+
+<span class="cm"># Wrap it with MultiQueryRetriever using an LLM</span>
+<span class="var">multiquery_retriever</span> = <span class="cl">MultiQueryRetriever</span>.<span class="fn">from_llm</span>(
+    <span class="var">retriever</span>=<span class="var">vectorstore</span>.<span class="fn">as_retriever</span>(<span class="var">search_kwargs</span>={<span class="str">"k"</span>: <span class="num">5</span>}),
+    <span class="var">llm</span>=<span class="cl">ChatOpenAI</span>(<span class="var">model</span>=<span class="str">"gpt-3.5-turbo"</span>)
+)
+
+<span class="cm"># Query</span>
+<span class="var">query</span> = <span class="str">"How to improve energy levels and maintain balance?"</span>
+<span class="var">results</span> = <span class="var">multiquery_retriever</span>.<span class="fn">invoke</span>(<span class="var">query</span>)
+
+<span class="fn">print</span>(<span class="str">f"Retrieved {<span class="fn">len</span>(<span class="var">results</span>)} unique documents"</span>)</code></pre>
+            </div>
+
+            <div class="info-box orange">
+                <strong>⚠️ Trade-off</strong>
+                Multi-Query Retriever increases <strong>recall</strong> (finds more relevant docs) but costs
+                <strong>more LLM API calls</strong> (one per sub-query generation + the LLM call for query generation
+                itself). Use it when recall matters more than cost.
+            </div>
+        </section>
+
+        <!-- ──────────────────────────────────────
+       SECTION 7 — CONTEXTUAL COMPRESSION
+  ────────────────────────────────────── -->
+        <section class="section" id="s7">
+            <div class="section-header">
+                <span class="section-num orange">45</span>
+                <h2>Contextual Compression Retriever</h2>
+            </div>
+
+            <div class="info-box">
+                <strong>🗜️ Definition</strong>
+                The <strong>Contextual Compression Retriever</strong> is an advanced retriever that improves retrieval
+                quality by <strong>compressing documents after retrieval</strong> — keeping only the relevant content
+                based on the user's query.
+            </div>
+
+            <h3 style="margin-bottom:16px;">The Problem with Standard Retrievers</h3>
+
+            <div class="card accent-red mb-24">
+                <h3>❌ Example: Query = "What is photosynthesis?"</h3>
+                <div
+                    style="background:#fff3cd; border-radius:8px; padding:14px 18px; margin-top:12px; border:1px solid #ffc107;">
+                    <p style="font-size:14px; font-style:italic; color:#664d03;">"<strong>The Grand Canyon is a famous
+                            natural site.</strong> Photosynthesis is how plants convert light into energy. <strong>Many
+                            tourists visit every year.</strong>"</p>
+                </div>
+                <ul style="margin-top:12px;">
+                    <li>The retriever returns the <strong>entire paragraph</strong></li>
+                    <li>Only <strong>one sentence</strong> is actually relevant to the query</li>
+                    <li>The rest is <strong>irrelevant noise</strong> that wastes context window</li>
+                </ul>
+            </div>
+
+            <div class="card accent-green mb-24">
+                <h3>✅ What Contextual Compression Does</h3>
+                <div
+                    style="background:#d3f9d8; border-radius:8px; padding:14px 18px; margin-top:12px; border:1px solid #40c057;">
+                    <p style="font-size:14px; font-style:italic; color:#1a5c2e;">"Photosynthesis is how plants convert
+                        light into energy."</p>
+                </div>
+                <p style="margin-top:10px; font-size:14px;">Returns <strong>only the relevant part</strong> — trimmed by
+                    an LLM compressor.</p>
+            </div>
+
+            <!-- Architecture Diagram -->
+            <div class="flow-diagram">
+                <p
+                    style="font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:24px; color:var(--muted);">
+                    CONTEXTUAL COMPRESSION ARCHITECTURE (K=2)</p>
+                <div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <div class="flow-node red">query</div>
+                        <div class="flow-label">User Input</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div>
+                        <div class="flow-node blue">Base Retriever</div>
+                        <div class="flow-label">FAISS / Chroma</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div class="flow-node yellow" style="padding:8px 14px; font-size:12px;">D1 (full doc)</div>
+                        <div class="flow-node yellow" style="padding:8px 14px; font-size:12px;">D2 (full doc)</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div>
+                        <div class="flow-node purple">LLM<br>Compressor</div>
+                        <div class="flow-label">per document</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div class="flow-node green" style="padding:8px 14px; font-size:12px;">D1' (compressed)</div>
+                        <div class="flow-node green" style="padding:8px 14px; font-size:12px;">D2' (compressed)</div>
+                    </div>
+                </div>
+                <div
+                    style="margin-top:10px; font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace;">
+                    Query also sent to LLM to guide what is "relevant" in each document</div>
+            </div>
+
+            <h3 style="margin-bottom:16px; margin-top:28px;">How It Works</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h4>Base Retriever Fetches N Documents</h4>
+                        <p>A standard retriever (e.g., FAISS, Chroma) retrieves K documents using similarity search.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h4>A Compressor is Applied to Each Document</h4>
+                        <p>An LLM compressor (e.g., <span class="hl">LLMChainExtractor</span>) processes each document
+                            along with the original query.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h4>The Compressor Keeps Only Relevant Parts</h4>
+                        <p>The LLM extracts only the sentences/paragraphs that are relevant to the query.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-content">
+                        <h4>Irrelevant Content is Discarded</h4>
+                        <p>Noise, off-topic sentences, and unrelated context are removed before passing to the LLM.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="dots">
+                        <div class="dot r"></div>
+                        <div class="dot y"></div>
+                        <div class="dot g"></div>
+                    </div>
+                    <span class="lang-badge">Python — Contextual Compression</span>
+                </div>
+                <pre><code><span class="kw">from</span> <span class="var">langchain.retrievers</span> <span class="kw">import</span> <span class="cl">ContextualCompressionRetriever</span>
+<span class="kw">from</span> <span class="var">langchain.retrievers.document_compressors</span> <span class="kw">import</span> <span class="cl">LLMChainExtractor</span>
+<span class="kw">from</span> <span class="var">langchain_openai</span> <span class="kw">import</span> <span class="cl">ChatOpenAI</span>
+
+<span class="cm"># Step 1: Create FAISS vector store from documents</span>
+<span class="var">embedding_model</span> = <span class="cl">OpenAIEmbeddings</span>()
+<span class="var">vectorstore</span> = <span class="cl">FAISS</span>.<span class="fn">from_documents</span>(<span class="var">docs</span>, <span class="var">embedding_model</span>)
+
+<span class="cm"># Step 2: Create base retriever</span>
+<span class="var">base_retriever</span> = <span class="var">vectorstore</span>.<span class="fn">as_retriever</span>(<span class="var">search_kwargs</span>={<span class="str">"k"</span>: <span class="num">5</span>})
+
+<span class="cm"># Step 3: Set up the LLM compressor</span>
+<span class="var">llm</span> = <span class="cl">ChatOpenAI</span>(<span class="var">model</span>=<span class="str">"gpt-3.5-turbo"</span>)
+<span class="var">compressor</span> = <span class="cl">LLMChainExtractor</span>.<span class="fn">from_llm</span>(<span class="var">llm</span>)
+
+<span class="cm"># Step 4: Wrap into Contextual Compression Retriever</span>
+<span class="var">compression_retriever</span> = <span class="cl">ContextualCompressionRetriever</span>(
+    <span class="var">base_retriever</span>=<span class="var">base_retriever</span>,
+    <span class="var">base_compressor</span>=<span class="var">compressor</span>
+)
+
+<span class="cm"># Step 5: Query the retriever</span>
+<span class="var">query</span> = <span class="str">"What is photosynthesis?"</span>
+<span class="var">compressed_results</span> = <span class="var">compression_retriever</span>.<span class="fn">invoke</span>(<span class="var">query</span>)
+
+<span class="kw">for</span> <span class="var">doc</span> <span class="kw">in</span> <span class="var">compressed_results</span>:
+    <span class="fn">print</span>(<span class="var">doc</span>.page_content)  <span class="cm"># Only relevant content!</span></code></pre>
+            </div>
+
+            <div class="grid-3 mt-20">
+                <div class="card accent-green">
+                    <h3>✅ When to Use</h3>
+                    <ul>
+                        <li>Documents are <strong>long and mixed</strong></li>
+                        <li>Want to <strong>reduce context length</strong> for LLMs</li>
+                        <li>Need to <strong>improve answer accuracy</strong> in RAG</li>
+                    </ul>
+                </div>
+                <div class="card accent-orange">
+                    <h3>⚠️ Trade-offs</h3>
+                    <ul>
+                        <li>Adds <strong>LLM call per document</strong> = more cost</li>
+                        <li>Increases <strong>latency</strong></li>
+                        <li>LLM might incorrectly compress</li>
+                    </ul>
+                </div>
+                <div class="card accent-blue">
+                    <h3>🔧 Alternatives to LLMChainExtractor</h3>
+                    <ul>
+                        <li><span class="hl">EmbeddingsFilter</span> — Faster, no LLM call</li>
+                        <li><span class="hl">DocumentCompressorPipeline</span> — Chain multiple compressors</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ──────────────────────────────────────
+       SECTION 8 — MORE RETRIEVERS
+  ────────────────────────────────────── -->
+        <section class="section" id="s8">
+            <div class="section-header">
+                <span class="section-num" style="background:#0ca678;">46</span>
+                <h2>More Retrievers in LangChain</h2>
+            </div>
+
+            <p>LangChain's ecosystem includes many more specialized retrievers. Choosing the right retriever directly
+                impacts your <strong>RAG pipeline performance</strong>.</p>
+
+            <div class="info-box green">
+                <strong>🚀 Key Insight</strong>
+                Better retriever → Better context for LLM → Better answers. Investing in the right retriever strategy is
+                one of the highest-leverage improvements in Advanced RAG.
+            </div>
+
+            <div class="retriever-grid mt-20">
+                <div class="ret-card" style="border-top:3px solid #f76707;">
+                    <div class="ret-name">BM25Retriever</div>
+                    <p>Classic keyword-based retrieval (Best Match 25). No embeddings needed. Great for exact keyword
+                        matching and traditional IR tasks.</p>
+                </div>
+                <div class="ret-card" style="border-top:3px solid var(--accent);">
+                    <div class="ret-name">ParentDocumentRetriever</div>
+                    <p>Stores small chunks for precise retrieval, but returns the full parent document to preserve
+                        context. Best of both worlds.</p>
+                </div>
+                <div class="ret-card" style="border-top:3px solid var(--accent4);">
+                    <div class="ret-name">TimeWeightedVectorRetriever</div>
+                    <p>Combines semantic similarity with recency. Recent documents get a higher score. Ideal for news
+                        feeds, chat history, or time-sensitive knowledge.</p>
+                </div>
+                <div class="ret-card" style="border-top:3px solid var(--accent5);">
+                    <div class="ret-name">SelfQueryRetriever</div>
+                    <p>Uses an LLM to auto-generate metadata filters from your query. Enables structured filtering
+                        (e.g., "papers from 2023 about ML").</p>
+                </div>
+                <div class="ret-card" style="border-top:3px solid var(--accent3);">
+                    <div class="ret-name">EnsembleRetriever</div>
+                    <p>Combines multiple retrievers (e.g., BM25 + Vector) using Reciprocal Rank Fusion. Best for hybrid
+                        search scenarios.</p>
+                </div>
+                <div class="ret-card" style="border-top:3px solid var(--accent2);">
+                    <div class="ret-name">MultiVectorRetriever</div>
+                    <p>Stores multiple vector representations per document (summaries, chunks, hypothetical questions).
+                        Improves recall significantly.</p>
+                </div>
+                <div class="ret-card" style="border-top:3px solid #0ca678;">
+                    <div class="ret-name">ArxivRetriever</div>
+                    <p>Directly queries the ArXiv API for academic/research papers. Returns papers as Document objects.
+                        Great for research-oriented applications.</p>
+                </div>
+            </div>
+
+            <!-- Decision Guide -->
+            <div class="card accent-blue mt-20">
+                <h3>🗺️ Quick Decision Guide</h3>
+                <div class="table-wrap" style="margin-top:14px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Scenario</th>
+                                <th>Recommended Retriever</th>
+                                <th>Why</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Simple semantic search on custom docs</td>
+                                <td><span class="badge blue">VectorStoreRetriever</span></td>
+                                <td>Fast, straightforward</td>
+                            </tr>
+                            <tr>
+                                <td>Need diverse, non-redundant results</td>
+                                <td><span class="badge purple">MMR</span></td>
+                                <td>Reduces repetition</td>
+                            </tr>
+                            <tr>
+                                <td>Broad/ambiguous queries</td>
+                                <td><span class="badge green">MultiQueryRetriever</span></td>
+                                <td>Wider recall via sub-queries</td>
+                            </tr>
+                            <tr>
+                                <td>Long mixed-content documents</td>
+                                <td><span class="badge yellow">ContextualCompression</span></td>
+                                <td>Cleans noise, saves tokens</td>
+                            </tr>
+                            <tr>
+                                <td>Need keyword + semantic hybrid</td>
+                                <td><span class="badge blue">EnsembleRetriever</span></td>
+                                <td>BM25 + Vector fusion</td>
+                            </tr>
+                            <tr>
+                                <td>Time-sensitive data / recent news</td>
+                                <td><span class="badge yellow">TimeWeightedVector</span></td>
+                                <td>Boosts recent documents</td>
+                            </tr>
+                            <tr>
+                                <td>Metadata-based filtering needed</td>
+                                <td><span class="badge purple">SelfQueryRetriever</span></td>
+                                <td>LLM-generated filters</td>
+                            </tr>
+                            <tr>
+                                <td>Academic research papers</td>
+                                <td><span class="badge green">ArxivRetriever</span></td>
+                                <td>Direct API access</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RAG Performance Link -->
+            <div class="flow-diagram mt-20">
+                <p
+                    style="font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:20px; color:var(--muted);">
+                    RETRIEVER QUALITY → RAG PERFORMANCE</p>
+                <div class="flow-row">
+                    <div class="flow-node red">RAG Pipeline</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node blue">Better Retriever</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node green">Better Performance</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node purple">Advanced RAG</div>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /container -->
+
+    <!-- ═══════════════ FOOTER ═══════════════ -->
+    <footer class="footer">
+        <h2>🔍 Retrievers in LangChain — Complete</h2>
+        <p>From basic retriever concepts to advanced RAG strategies — Wikipedia, Vector Store, MMR, Multi-Query, and
+            Contextual Compression.</p>
+        <div class="footer-meta">
+            📅 10 April 2025 &nbsp;·&nbsp; 📺 CampusX — Video 13 &nbsp;·&nbsp; 🐍 Python / LangChain &nbsp;·&nbsp; ⏱ 51
+            minutes
+        </div>
+        <div class="footer-badges">
+            <span class="footer-badge">🦜 LangChain</span>
+            <span class="footer-badge">🔢 OpenAI Embeddings</span>
+            <span class="footer-badge">🗄️ Chroma / FAISS</span>
+            <span class="footer-badge">🤖 GPT-3.5-Turbo</span>
+            <span class="footer-badge">📚 Wikipedia API</span>
+            <span class="footer-badge">🧮 ArXiv API</span>
+        </div>
+    </footer>
+
+</body>
+
+</html>

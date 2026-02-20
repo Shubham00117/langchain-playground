@@ -34,7 +34,7 @@ doc5 = Document(
 docs = [doc1, doc2, doc3, doc4, doc5]
 
 # =================================================================
-# 2. INITIALIZE FAISS (Concept: Local Vector Index)
+# 2. INITIALIZE FAISS (Concept: Local Vector Index) 
 # =================================================================
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
@@ -68,7 +68,7 @@ print("\n--- Basic Similarity Search ---")
 query = "Who among these are a bowler?"
 results = vector_store.similarity_search(query, k=2)
 for res in results:
-    print(f"Result: {res.page_content} [{res.metadata.get('team')}]")
+    print(f"Result: {res.page_content} (Team: {res.metadata.get('team')})")
 
 # =================================================================
 # 6. SIMILARITY SEARCH WITH SCORE (Concept: Relevance Scoring)
@@ -101,7 +101,7 @@ vector_store.save_local("my_faiss_index")
 print("Index saved to 'my_faiss_index' folder.")
 
 # To load:
-# new_db = FAISS.load_local("my_faiss_index", embeddings, allow_dangerous_deserialization=True)
+#new_db = FAISS.load_local("my_faiss_index", embeddings, allow_dangerous_deserialization=True)
 
 # =================================================================
 # 9. DELETE DOCUMENTS (Concept: Cleanup)
