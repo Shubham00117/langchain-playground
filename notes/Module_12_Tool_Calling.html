@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool Calling in LangChain — Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #1e2326;
+            --surface: #272e33;
+            --surface2: #2e383c;
+            --border: #3c4841;
+            --accent: #a7c080;
+            --accent2: #7fbbb3;
+            --accent3: #d699b6;
+            --accent4: #dbbc7e;
+            --text: #d3c6aa;
+            --muted: #859289;
+            --code-bg: #232a2e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 3rem 0 2.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 3rem;
+        }
+
+        .tag {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            color: var(--accent2);
+            border: 1px solid var(--accent2);
+            padding: 0.2rem 0.8rem;
+            border-radius: 2px;
+            margin-bottom: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2rem, 5vw, 3rem);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #7fbbb3 0%, #d699b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--surface);
+            transition: border-color 0.2s;
+        }
+
+        .section:hover {
+            border-color: #4a5568;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+
+        .num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--muted);
+            min-width: 1.8rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .section-body {
+            padding: 1.5rem;
+        }
+
+        /* Section Colors */
+        .s1 .dot {
+            background: var(--accent2);
+        }
+
+        .s1 .section-header h2 {
+            color: var(--accent2);
+        }
+
+        .s2 .dot {
+            background: var(--accent4);
+        }
+
+        .s2 .section-header h2 {
+            color: var(--accent4);
+        }
+
+        .s3 .dot {
+            background: var(--accent);
+        }
+
+        .s3 .section-header h2 {
+            color: var(--accent);
+        }
+
+        .s4 .dot {
+            background: var(--accent3);
+        }
+
+        .s4 .section-header h2 {
+            color: var(--accent3);
+        }
+
+        .s5 .dot {
+            background: var(--accent2);
+        }
+
+        .s5 .section-header h2 {
+            color: var(--accent2);
+        }
+
+        .s6 .dot {
+            background: var(--accent4);
+        }
+
+        .s6 .section-header h2 {
+            color: var(--accent4);
+        }
+
+        /* Definition box */
+        .def {
+            background: var(--code-bg);
+            border-left: 3px solid;
+            border-radius: 0 8px 8px 0;
+            padding: 0.9rem 1.2rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .s1 .def {
+            border-color: var(--accent2);
+        }
+
+        .s2 .def {
+            border-color: var(--accent4);
+        }
+
+        .s3 .def {
+            border-color: var(--accent);
+        }
+
+        .s4 .def {
+            border-color: var(--accent3);
+        }
+
+        .s5 .def {
+            border-color: var(--accent2);
+        }
+
+        .s6 .def {
+            border-color: var(--accent4);
+        }
+
+        /* Flow */
+        .flow {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .flow-box {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 1.2rem;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .flow-box.blue {
+            color: var(--accent2);
+            border-color: var(--accent2);
+        }
+
+        .flow-box.yellow {
+            color: var(--accent4);
+            border-color: var(--accent4);
+        }
+
+        .flow-box.green {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .flow-box.purple {
+            color: var(--accent3);
+            border-color: var(--accent3);
+        }
+
+        .arrow {
+            color: var(--muted);
+            font-size: 1.1rem;
+        }
+
+        /* Two col */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 580px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .col-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.1rem;
+        }
+
+        .col-box h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.6rem;
+            color: var(--accent2);
+        }
+
+        /* Loop diagram */
+        .loop {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.4rem;
+            margin: 1rem 0;
+        }
+
+        .loop-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .loop-step:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent2);
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        .step-content h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.2rem;
+        }
+
+        .step-content p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        /* Code block */
+        .code-block {
+            background: #1e1e2e;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .code-header {
+            background: #181825;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .lang-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            color: #cdd6f4;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot-code {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-code.r {
+            background: #ff5f57;
+        }
+
+        .dot-code.y {
+            background: #febc2e;
+        }
+
+        .dot-code.g {
+            background: #28c840;
+        }
+
+        pre {
+            padding: 20px 22px;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #cdd6f4;
+            white-space: pre;
+        }
+
+        .kw {
+            color: var(--accent2);
+        }
+
+        .fn {
+            color: #4ade80;
+        }
+
+        .st {
+            color: var(--accent3);
+        }
+
+        .cm {
+            color: #5c6266;
+        }
+
+        .dc {
+            color: #fb923c;
+        }
+
+        .tp {
+            color: var(--accent);
+        }
+
+        .nu {
+            color: #fbbf24;
+        }
+
+        /* Inline code */
+        p code,
+        li code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent4);
+            background: var(--code-bg);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 0.7rem;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        ul {
+            padding-left: 1.2rem;
+            color: var(--muted);
+            font-size: 0.88rem;
+            margin-bottom: 0.6rem;
+        }
+
+        li {
+            margin-bottom: 0.3rem;
+        }
+
+        /* Response box */
+        .resp-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin: 0.8rem 0;
+            line-height: 1.8;
+        }
+
+        .resp-box .key {
+            color: var(--accent2);
+        }
+
+        .resp-box .val {
+            color: var(--accent3);
+        }
+
+        .resp-box .str {
+            color: var(--accent4);
+        }
+
+        /* Highlights row */
+        .highlights {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 580px) {
+            .highlights {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hl-card {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .hl-icon {
+            font-size: 1.4rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .hl-card h4 {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.3rem;
+        }
+
+        .hl-card p {
+            font-size: 0.78rem;
+            margin: 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <header>
+            <div class="tag">LangChain · Module 12 · CampusX</div>
+            <h1>Tool Calling</h1>
+            <p>How the LLM decides when / how to call a tool — complete mechanics</p>
+        </header>
+
+        <!-- 1. What is Tool Calling? -->
+        <div class="section s1">
+            <div class="section-header">
+                <span class="num">72</span>
+                <h2>What is Tool Calling?</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    <strong>Tool Calling</strong> = Tool + LLM working together. The LLM <em>decides</em> when to call
+                    a tool, <em>what arguments</em> to pass, and the result is fed back to continue the conversation.
+                </div>
+                <p>This is fundamentally different from manually calling a tool via <code>tool.invoke()</code>. In tool
+                    calling, the <strong>LLM is in charge</strong> — it reads the user's query and decides on its own
+                    whether a tool is needed.</p>
+                <div class="two-col" style="margin-top:1rem">
+                    <div class="col-box">
+                        <h4>Manual Tool Use</h4>
+                        <ul>
+                            <li>You explicitly call <code>tool.invoke()</code></li>
+                            <li>You decide when / how</li>
+                            <li>No LLM involvement in routing</li>
+                        </ul>
+                    </div>
+                    <div class="col-box" style="border-color: var(--accent2);">
+                        <h4 style="color: var(--accent2);">Tool Calling (LLM-driven)</h4>
+                        <ul>
+                            <li>LLM decides if a tool is needed</li>
+                            <li>LLM provides the arguments</li>
+                            <li>Result fed back to the LLM</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. bind_tools — Connecting Tools to the LLM -->
+        <div class="section s2">
+            <div class="section-header">
+                <span class="num">73</span>
+                <h2>bind_tools — Connecting Tools to LLM</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    <code>llm.bind_tools([tool1, tool2])</code> registers the tools with the LLM. The LLM receives the
+                    tool schemas (name, description, args) and can reference them when generating a response.
+                </div>
+                <p>The LLM does <strong>not</strong> execute tools itself. It only decides to "request" a tool call.
+                    Your code is responsible for executing the actual tool logic.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_groq <span class="kw">import</span> <span class="fn">ChatGroq</span>
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> <span class="dc">tool</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">multiply</span>(a: <span class="tp">int</span>, b: <span class="tp">int</span>) -> <span class="tp">int</span>:
+    <span class="st">"""Multiply two numbers."""</span>
+    <span class="kw">return</span> a * b
+
+llm = <span class="fn">ChatGroq</span>(model=<span class="st">"llama-3.3-70b-versatile"</span>)
+
+<span class="cm"># Bind the tool — LLM now "knows" about this tool</span>
+llm_with_tools = llm.<span class="fn">bind_tools</span>([multiply])</code></pre>
+                </div>
+                <div class="highlights">
+                    <div class="hl-card">
+                        <div class="hl-icon">📋</div>
+                        <h4>Tool Schema</h4>
+                        <p>name, description, and args are sent to the LLM as part of the system context</p>
+                    </div>
+                    <div class="hl-card">
+                        <div class="hl-icon">🧠</div>
+                        <h4>LLM Decides</h4>
+                        <p>Based on the query, the LLM chooses whether to call a tool or respond directly</p>
+                    </div>
+                    <div class="hl-card">
+                        <div class="hl-icon">⚙️</div>
+                        <h4>You Execute</h4>
+                        <p>Your code reads the tool call from the response and executes it manually</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Reading the Tool Call Response -->
+        <div class="section s3">
+            <div class="section-header">
+                <span class="num">74</span>
+                <h2>Reading the Tool Call Response</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    When the LLM decides to call a tool, the response has <code>response.tool_calls</code> — a list of
+                    dicts, each containing the <strong>tool name</strong> and <strong>arguments</strong> the LLM wants
+                    to use.
+                </div>
+                <p>The <code>response.content</code> will be empty when a tool call is made. You must check for
+                    <code>tool_calls</code> first.
+                </p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code>response = llm_with_tools.<span class="fn">invoke</span>(<span class="st">"What is 3 multiplied by 5?"</span>)
+
+<span class="cm"># response.tool_calls is a list of dicts</span>
+<span class="fn">print</span>(response.tool_calls)
+
+<span class="cm"># Output structure:</span>
+<span class="cm"># [{'name': 'multiply', 'args': {'a': 3, 'b': 5}, 'id': 'abc123', 'type': 'tool_call'}]</span>
+
+<span class="kw">if</span> response.tool_calls:
+    <span class="kw">for</span> tool_call <span class="kw">in</span> response.tool_calls:
+        <span class="fn">print</span>(<span class="st">"Tool:"</span>, tool_call[<span class="st">"name"</span>])   <span class="cm"># → multiply</span>
+        <span class="fn">print</span>(<span class="st">"Args:"</span>, tool_call[<span class="st">"args"</span>])   <span class="cm"># → {'a': 3, 'b': 5}</span>
+<span class="kw">else</span>:
+    <span class="fn">print</span>(response.content)              <span class="cm"># → direct text response</span></code></pre>
+                </div>
+                <p>The <code>id</code> field in each tool call is important — you must include it when sending the
+                    tool result back in a multi-turn conversation.</p>
+            </div>
+        </div>
+
+        <!-- 4. The Full Tool Calling Loop -->
+        <div class="section s4">
+            <div class="section-header">
+                <span class="num">75</span>
+                <h2>The Full Tool Calling Loop</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    The complete tool calling workflow is a loop: User → LLM → Tool Call → Execute → Feed Result Back →
+                    LLM → Final Answer.
+                </div>
+                <div class="loop">
+                    <div class="loop-step">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <h4>User Query</h4>
+                            <p>User sends a natural language query to the LLM.</p>
+                        </div>
+                    </div>
+                    <div class="loop-step">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <h4>LLM Responds with Tool Call</h4>
+                            <p>If a tool is needed, <code>response.tool_calls</code> is populated with tool name + args.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="loop-step">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <h4>Execute the Tool</h4>
+                            <p>Your code invokes the tool with the provided arguments and captures the result.</p>
+                        </div>
+                    </div>
+                    <div class="loop-step">
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <h4>Send Result Back as ToolMessage</h4>
+                            <p>Wrap the result in a <code>ToolMessage</code> and append it to the message history.</p>
+                        </div>
+                    </div>
+                    <div class="loop-step">
+                        <div class="step-num">5</div>
+                        <div class="step-content">
+                            <h4>LLM Generates Final Answer</h4>
+                            <p>The LLM reads the tool result and produces the final user-facing response.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_core.messages <span class="kw">import</span> <span class="tp">HumanMessage</span>, <span class="tp">ToolMessage</span>
+
+messages = [<span class="fn">HumanMessage</span>(<span class="st">"What is 3 multiplied by 5?"</span>)]
+
+<span class="cm"># Step 1: LLM decides which tool to use</span>
+ai_msg = llm_with_tools.<span class="fn">invoke</span>(messages)
+messages.<span class="fn">append</span>(ai_msg)
+
+<span class="cm"># Step 2: Execute the tool and feed result back</span>
+<span class="kw">for</span> tool_call <span class="kw">in</span> ai_msg.tool_calls:
+    result = multiply.<span class="fn">invoke</span>(tool_call[<span class="st">"args"</span>])
+    messages.<span class="fn">append</span>(
+        <span class="fn">ToolMessage</span>(content=<span class="fn">str</span>(result), tool_call_id=tool_call[<span class="st">"id"</span>])
+    )
+
+<span class="cm"># Step 3: LLM generates the final answer using tool result</span>
+final_response = llm_with_tools.<span class="fn">invoke</span>(messages)
+<span class="fn">print</span>(final_response.content)  <span class="cm"># → "3 multiplied by 5 is 15."</span></code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Parallel Tool Calling -->
+        <div class="section s5">
+            <div class="section-header">
+                <span class="num">76</span>
+                <h2>Parallel Tool Calling</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    When a query requires multiple operations, the LLM can generate <strong>multiple tool calls at
+                        once</strong> in a single response. <code>response.tool_calls</code> will be a list with more
+                    than
+                    one item.
+                </div>
+                <p>This is efficient because all tools can be executed in parallel, reducing latency instead of going
+                    back-and-forth for each tool one by one.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_core.tools <span class="kw">import</span> <span class="dc">tool</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">add</span>(a: <span class="tp">int</span>, b: <span class="tp">int</span>) -> <span class="tp">int</span>:
+    <span class="st">"""Add two numbers."""</span>
+    <span class="kw">return</span> a + b
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">multiply</span>(a: <span class="tp">int</span>, b: <span class="tp">int</span>) -> <span class="tp">int</span>:
+    <span class="st">"""Multiply two numbers."""</span>
+    <span class="kw">return</span> a * b
+
+llm_with_tools = llm.<span class="fn">bind_tools</span>([add, multiply])
+
+<span class="cm"># Query that requires BOTH tools</span>
+response = llm_with_tools.<span class="fn">invoke</span>(<span class="st">"What is 3+5 and 4*7?"</span>)
+
+<span class="cm"># response.tool_calls has 2 items</span>
+<span class="kw">for</span> tc <span class="kw">in</span> response.tool_calls:
+    <span class="fn">print</span>(tc[<span class="st">"name"</span>], tc[<span class="st">"args"</span>])
+<span class="cm"># → add {'a': 3, 'b': 5}</span>
+<span class="cm"># → multiply {'a': 4, 'b': 7}</span></code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. tool_choice — Controlling Which Tool is Used -->
+        <div class="section s6">
+            <div class="section-header">
+                <span class="num">77</span>
+                <h2>tool_choice — Forcing Tool Usage</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    By default, the LLM decides whether to call a tool. You can override this with
+                    <code>tool_choice</code> to <strong>force</strong> the LLM to always use a specific tool, or to
+                    use any tool.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="cm"># Option 1: "auto" (default) — LLM decides whether to use a tool</span>
+llm.<span class="fn">bind_tools</span>([multiply], tool_choice=<span class="st">"auto"</span>)
+
+<span class="cm"># Option 2: "any" — LLM MUST call at least one tool</span>
+llm.<span class="fn">bind_tools</span>([multiply], tool_choice=<span class="st">"any"</span>)
+
+<span class="cm"># Option 3: force a specific tool by name</span>
+llm.<span class="fn">bind_tools</span>([multiply, add], tool_choice=<span class="st">"multiply"</span>)
+<span class="cm"># → LLM will ALWAYS call multiply, regardless of the query</span></code></pre>
+                </div>
+                <p><strong>When to use:</strong> Use <code>tool_choice="any"</code> when you want to guarantee
+                    structured output (e.g., data extraction pipelines). Use a specific tool name when you need
+                    deterministic behaviour.</p>
+            </div>
+        </div>
+
+        <footer>Tool Calling in LangChain · Module 12 · CampusX · Generative AI Series</footer>
+    </div>
+</body>
+
+</html>

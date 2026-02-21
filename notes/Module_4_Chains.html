@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chains — Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #1e2326;
+            --surface: #272e33;
+            --surface2: #2e383c;
+            --border: #3c4841;
+            --accent: #a7c080;
+            --accent2: #7fbbb3;
+            --accent3: #d699b6;
+            --accent4: #dbbc7e;
+            --text: #d3c6aa;
+            --muted: #859289;
+            --code-bg: #232a2e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 0 2.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 3rem;
+        }
+
+        .tag {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 0.2rem 0.8rem;
+            border-radius: 2px;
+            margin-bottom: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2rem, 5vw, 3rem);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #d3c6aa 0%, #859289 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--surface);
+            transition: border-color 0.2s;
+        }
+
+        .section:hover {
+            border-color: #4a5568;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+
+        .num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--muted);
+            min-width: 1.8rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .section-body {
+            padding: 1.5rem;
+        }
+
+        /* Section color classes — cycle through these */
+        .s1 .dot {
+            background: var(--accent);
+        }
+
+        .s1 .section-header h2 {
+            color: var(--accent);
+        }
+
+        .s1 .def {
+            border-color: var(--accent);
+        }
+
+        .s2 .dot {
+            background: var(--accent2);
+        }
+
+        .s2 .section-header h2 {
+            color: var(--accent2);
+        }
+
+        .s2 .def {
+            border-color: var(--accent2);
+        }
+
+        .s3 .dot {
+            background: var(--accent3);
+        }
+
+        .s3 .section-header h2 {
+            color: var(--accent3);
+        }
+
+        .s3 .def {
+            border-color: var(--accent3);
+        }
+
+        .s4 .dot {
+            background: var(--accent4);
+        }
+
+        .s4 .section-header h2 {
+            color: var(--accent4);
+        }
+
+        .s4 .def {
+            border-color: var(--accent4);
+        }
+
+        .def {
+            background: var(--code-bg);
+            border-left: 3px solid;
+            border-radius: 0 8px 8px 0;
+            padding: 0.9rem 1.2rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .code-block {
+            background: #1e1e2e;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .code-header {
+            background: #181825;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .lang-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            color: #cdd6f4;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot-code {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-code.r {
+            background: #ff5f57;
+        }
+
+        .dot-code.y {
+            background: #febc2e;
+        }
+
+        .dot-code.g {
+            background: #28c840;
+        }
+
+        pre {
+            padding: 20px 22px;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #cdd6f4;
+            white-space: pre;
+        }
+
+        .kw {
+            color: var(--accent2);
+        }
+
+        .fn {
+            color: #4ade80;
+        }
+
+        .st {
+            color: var(--accent3);
+        }
+
+        .cm {
+            color: #5c6266;
+        }
+
+        .dc {
+            color: #fb923c;
+        }
+
+        .tp {
+            color: var(--accent);
+        }
+
+        p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 0.7rem;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        p code,
+        li code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent4);
+            background: var(--code-bg);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        ul {
+            padding-left: 1.2rem;
+            color: var(--muted);
+            font-size: 0.88rem;
+            margin-bottom: 0.6rem;
+        }
+
+        li {
+            margin-bottom: 0.3rem;
+        }
+
+        .note-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin: 0.8rem 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="tag">LangChain · Module 4 · CampusX</div>
+            <h1>Chains</h1>
+            <p>Generative AI using LangChain · Complete Notes</p>
+        </header>
+
+        <div class="section s1">
+            <div class="section-header">
+                <span class="num">13</span>
+                <h2>Basic Chain</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    A chain is just a series of steps where data flows from one component to another. You connect a
+                    prompt, a model, and a parser together using the pipe (<code>|</code>) operator to build a complete
+                    workflow.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code>parser = <span class="fn">StrOutputParser</span>()
+<span class="cm"># simple chain connecting prompt, model, and parser</span>
+chain = prompt | model | parser
+
+<span class="cm"># invoke starts the flow</span>
+result = chain.<span class="fn">invoke</span>({<span class="st">"topic"</span>: <span class="st">"AI"</span>})</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>prompt</code> → <code>model</code> → <code>parser</code> → returns clean response string.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s2">
+            <div class="section-header">
+                <span class="num">14</span>
+                <h2>Sequential Chain</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    Used when you want to perform tasks one after another, where the output of the first task is given
+                    to the second task. For example, generating a long report first and then creating a summary of that
+                    report.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code>parser = <span class="fn">StrOutputParser</span>()
+<span class="cm"># chain 1 generates a long report</span>
+chain1 = prompt1 | model | parser
+
+<span class="cm"># chain 2 takes string and summarizes it</span>
+<span class="cm"># lambda maps the string to a dictionary key that prompt2 expects</span>
+full_chain = chain1 | (<span class="kw">lambda</span> x: {<span class="st">"text"</span>: x}) | prompt2 | model | parser
+
+result = full_chain.<span class="fn">invoke</span>({<span class="st">"topic"</span>: <span class="st">"Generative AI"</span>})</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>chain1</code> output → mapped to dict → fed into <code>chain2</code> → sequential multi-step
+                    task.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s3">
+            <div class="section-header">
+                <span class="num">15</span>
+                <h2>Parallel Chain</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    Allows you to run multiple tasks at the exact same time using the same input. Useful when you want
+                    to generate different types of content simultaneously, like study notes AND a quiz from the same
+                    text.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> <span class="tp">RunnableParallel</span>
+
+parser = <span class="fn">StrOutputParser</span>()
+<span class="cm"># define two chains to run at once</span>
+parallel_chain = <span class="tp">RunnableParallel</span>({
+    <span class="st">"notes"</span>: prompt1 | model | parser,
+    <span class="st">"quiz"</span>: prompt2 | model | parser
+})
+
+<span class="cm"># result will be a dictionary containing both 'notes' and 'quiz'</span>
+result = parallel_chain.<span class="fn">invoke</span>({<span class="st">"text"</span>: data})
+
+<span class="cm">#create merge chain</span>
+merge_chain = prompt3 | model1 | parser
+
+<span class="cm">#combine into final chain</span>
+chain = parallel_chain | merge_chain
+
+result = chain.<span class="fn">invoke</span>({<span class="st">"text"</span>: data})</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>RunnableParallel({key: chain})</code> → runs all chains in parallel -> merge logic → returns
+                    dict of results.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s4">
+            <div class="section-header">
+                <span class="num">16</span>
+                <h2>Conditional Chain (Branching)</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    Acts like an "if-else" statement for your AI. The chain looks at the input (or output of a previous
+                    step) and decides which path to take based on a condition you set.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> <span class="tp">RunnableBranch</span>
+
+<span class="cm"># define logic: if positive do X, if negative do Y</span>
+branch = <span class="tp">RunnableBranch</span>(
+    (<span class="kw">lambda</span> x: x[<span class="st">"sentiment"</span>] == <span class="st">"positive"</span>, positive_chain),
+    (<span class="kw">lambda</span> x: x[<span class="st">"sentiment"</span>] == <span class="st">"negative"</span>, negative_chain),
+    default_chain
+)
+
+<span class="cm"># full chain first classifies then branches</span>
+full_chain = classification_chain | branch</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>RunnableBranch((condition, chain), default)</code> → checks condition → triggers specific
+                    branch.
+                </div>
+            </div>
+        </div>
+
+        <footer>Chains · Module 4 · CampusX · Generative AI Series</footer>
+    </div>
+</body>
+
+</html>

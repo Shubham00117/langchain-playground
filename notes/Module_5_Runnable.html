@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runnable — Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #1e2326;
+            --surface: #272e33;
+            --surface2: #2e383c;
+            --border: #3c4841;
+            --accent: #a7c080;
+            --accent2: #7fbbb3;
+            --accent3: #d699b6;
+            --accent4: #dbbc7e;
+            --text: #d3c6aa;
+            --muted: #859289;
+            --code-bg: #232a2e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 0 2.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 3rem;
+        }
+
+        .tag {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 0.2rem 0.8rem;
+            border-radius: 2px;
+            margin-bottom: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2rem, 5vw, 3rem);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #d3c6aa 0%, #859289 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--surface);
+            transition: border-color 0.2s;
+        }
+
+        .section:hover {
+            border-color: #4a5568;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+
+        .num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--muted);
+            min-width: 1.8rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .section-body {
+            padding: 1.5rem;
+        }
+
+        /* Section color classes — cycle through these */
+        .s1 .dot {
+            background: var(--accent);
+        }
+
+        .s1 .section-header h2 {
+            color: var(--accent);
+        }
+
+        .s1 .def {
+            border-color: var(--accent);
+        }
+
+        .s2 .dot {
+            background: var(--accent2);
+        }
+
+        .s2 .section-header h2 {
+            color: var(--accent2);
+        }
+
+        .s2 .def {
+            border-color: var(--accent2);
+        }
+
+        .s3 .dot {
+            background: var(--accent3);
+        }
+
+        .s3 .section-header h2 {
+            color: var(--accent3);
+        }
+
+        .s3 .def {
+            border-color: var(--accent3);
+        }
+
+        .s4 .dot {
+            background: var(--accent4);
+        }
+
+        .s4 .section-header h2 {
+            color: var(--accent4);
+        }
+
+        .s4 .def {
+            border-color: var(--accent4);
+        }
+
+        .def {
+            background: var(--code-bg);
+            border-left: 3px solid;
+            border-radius: 0 8px 8px 0;
+            padding: 0.9rem 1.2rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .code-block {
+            background: #1e1e2e;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .code-header {
+            background: #181825;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .lang-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            color: #cdd6f4;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot-code {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-code.r {
+            background: #ff5f57;
+        }
+
+        .dot-code.y {
+            background: #febc2e;
+        }
+
+        .dot-code.g {
+            background: #28c840;
+        }
+
+        pre {
+            padding: 20px 22px;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #cdd6f4;
+            white-space: pre;
+        }
+
+        .kw {
+            color: var(--accent2);
+        }
+
+        .fn {
+            color: #4ade80;
+        }
+
+        .st {
+            color: var(--accent3);
+        }
+
+        .cm {
+            color: #5c6266;
+        }
+
+        .dc {
+            color: #fb923c;
+        }
+
+        .tp {
+            color: var(--accent);
+        }
+
+        p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 0.7rem;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        p code,
+        li code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent4);
+            background: var(--code-bg);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        ul {
+            padding-left: 1.2rem;
+            color: var(--muted);
+            font-size: 0.88rem;
+            margin-bottom: 0.6rem;
+        }
+
+        li {
+            margin-bottom: 0.3rem;
+        }
+
+        .note-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin: 0.8rem 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="tag">LangChain · Module 5 · CampusX</div>
+            <h1>Runnable</h1>
+            <p>Generative AI using LangChain · Complete Notes</p>
+        </header>
+
+        <div class="section s1">
+            <div class="section-header">
+                <span class="num">17</span>
+                <h2>The Runnable Concept</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    This is the common "rulebook" that all LangChain components follow. Because they all implement the
+                    <code>invoke()</code> method, they can be easily "piped" together like building blocks.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="cm"># Think of .invoke() as the universal "Start" button for every component</span>
+<span class="cm"># Data flows: Input -> [ PROMPT ] -> [ MODEL ] -> [ PARSER ] -> Output</span>
+
+<span class="cm"># 1. Manual Flow (Each block has its own .invoke())</span>
+val1 = prompt.<span class="fn">invoke</span>({<span class="st">"topic"</span>: <span class="st">"AI"</span>})
+val2 = model.<span class="fn">invoke</span>(val1)
+final = parser.<span class="fn">invoke</span>(val2)
+
+<span class="cm"># 2. Piped Flow (All blocks unified into one .invoke())</span>
+chain = prompt | model | parser
+final = chain.<span class="fn">invoke</span>({<span class="st">"topic"</span>: <span class="st">"AI"</span>})</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>Runnable</code> interface → standard <code>.invoke()</code> method → allows all components to
+                    connect.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s2">
+            <div class="section-header">
+                <span class="num">18</span>
+                <h2>LCEL (The Pipe Operator)</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    The "pipe" operator (<code>|</code>) is the heart of LangChain Expression Language. It provides a
+                    visual and intuitive way to chain components together, allowing data to flow seamlessly from one
+                    step to the next while automatically handling the underlying logic of a
+                    <code>RunnableSequence</code>.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="cm"># data flows from left to right</span>
+<span class="cm"># prompt logic -> model processing -> parser output extraction</span>
+chain = prompt | model | parser</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>|</code> operator → connects runnables → creates <code>RunnableSequence</code> automatically.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s3">
+            <div class="section-header">
+                <span class="num">19</span>
+                <h2>RunnableSequence</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    <code>RunnableSequence</code> is the underlying container that manages a series of steps in a chain.
+                    It can be created explicitly using the <code>RunnableSequence</code> class or automatically by using
+                    the pipe operator (<code>|</code>). It ensures that data flows through each component in the exact
+                    order they are defined.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> <span class="tp">RunnableSequence</span>
+
+<span class="cm"># grouping existing chains and components explicitly</span>
+final_chain = <span class="tp">RunnableSequence</span>(
+    initial_chain,
+    summary_prompt,
+    model,
+    parser
+)
+
+<span class="cm"># same chain but using pipe operator</span>
+final_chain = (
+    initial_chain
+    | summary_prompt
+    | model
+    | parser
+)</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>RunnableSequence(step1, step2, ...)</code> → explicit class construction of a chain.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s4">
+            <div class="section-header">
+                <span class="num">20</span>
+                <h2>RunnableParallel</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    This is the tool that makes multi-tasking possible. By wrapping your chains in a dictionary format
+                    inside <code>RunnableParallel</code>, they all get executed at the same time.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> <span class="tp">RunnableParallel</span>
+
+<span class="cm"># dictionary keys become the labels for the parallel outputs</span>
+chain = <span class="tp">RunnableParallel</span>(
+    tweet = twitter_chain,
+    linkedin = linkedin_chain
+)</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>RunnableParallel(name=chain)</code> → name-based parallel execution → returns dictionary.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s1">
+            <div class="section-header">
+                <span class="num">21</span>
+                <h2>RunnablePassthrough</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    <code>RunnablePassthrough</code> is used to capture the output of a previous step and assign it
+                    directly to a dictionary key without changing it. This allows you to "branch" the flow: one branch
+                    preserves the original result in a specific key, while other branches use that same data as input
+                    for further processing.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> <span class="tp">RunnablePassthrough</span>
+
+<span class="cm"># 1. Define the initial step (e.g., generate a joke)</span>
+joke_gen_chain = <span class="tp">RunnableSequence</span>(prompt1, model, parser)
+
+<span class="cm"># 2. Create a parallel block to process the output from step 1</span>
+<span class="cm"># This keeps the original output while also performing a second task</span>
+parallel_chain = <span class="tp">RunnableParallel</span>({
+    <span class="st">"original_joke"</span>: <span class="tp">RunnablePassthrough</span>(), <span class="cm"># Passes the joke along unchanged</span>
+    <span class="st">"explanation"</span>: explanation_prompt | model | parser <span class="cm"># Processes the joke for an explanation</span>
+})
+
+<span class="cm"># 3. Combine the chains</span>
+final_chain = joke_gen_chain | parallel_chain | parser</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>RunnablePassthrough()</code> → takes input data → returns it exactly as it was received.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s2">
+            <div class="section-header">
+                <span class="num">22</span>
+                <h2>RunnableLambda</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    Allows you to turn any normal Python function into a LangChain component. If you have a custom bit
+                    of logic (like counting words or cleaning text) that isn't a prompt or a model, you wrap it in a
+                    lambda.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> <span class="tp">RunnableLambda</span>
+
+<span class="cm"># Custom function to be used with RunnableLambda</span>
+<span class="kw">def</span> <span class="fn">word_count</span>(text):
+    <span class="kw">return</span> <span class="fn">len</span>(text.<span class="fn">split</span>())
+
+<span class="cm"># 2. Parallel Chain with RunnableLambda</span>
+<span class="cm"># RunnableLambda allows you to run custom Python functions within a chain</span>
+parallel_chain = <span class="tp">RunnableParallel</span>({
+    <span class="st">'joke'</span>: <span class="tp">RunnablePassthrough</span>(),
+    <span class='st'>'word_count'</span>: <span class="tp">RunnableLambda</span>(word_count)
+})
+
+<span class="cm"># 3. Final Sequence</span>
+final_chain = joke_gen_chain | parallel_chain | parser</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>RunnableLambda(function)</code> → converts Python function → into a chainable component.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s3">
+            <div class="section-header">
+                <span class="num">23</span>
+                <h2>RunnableBranch</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    The official way to handle routing in LangChain. You provide a list of (condition, runnable) pairs,
+                    and it executes the first one where the condition is true.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> <span class="tp">RunnableBranch</span>
+
+<span class="cm"># routing based on text length</span>
+branch = <span class="tp">RunnableBranch</span>(
+    (<span class="kw">lambda</span> x: <span class="fn">len</span>(x) > 500, summary_chain),
+    <span class="tp">RunnablePassthrough</span>() <span class="cm"># default: if short, do nothing</span>
+)</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>RunnableBranch</code> → list of <code>(if, then)</code> → first true condition wins.
+                </div>
+            </div>
+        </div>
+
+        <footer>Runnable · Module 5 · CampusX · Generative AI Series</footer>
+    </div>
+</body>
+
+</html>

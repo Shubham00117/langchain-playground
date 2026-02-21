@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Loaders — Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #1e2326;
+            --surface: #272e33;
+            --surface2: #2e383c;
+            --border: #3c4841;
+            --accent: #a7c080;
+            --accent2: #7fbbb3;
+            --accent3: #d699b6;
+            --accent4: #dbbc7e;
+            --text: #d3c6aa;
+            --muted: #859289;
+            --code-bg: #232a2e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 0 2.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 3rem;
+        }
+
+        .tag {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 0.2rem 0.8rem;
+            border-radius: 2px;
+            margin-bottom: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2rem, 5vw, 3rem);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #d3c6aa 0%, #859289 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--surface);
+            transition: border-color 0.2s;
+        }
+
+        .section:hover {
+            border-color: #4a5568;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+
+        .num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--muted);
+            min-width: 1.8rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .section-body {
+            padding: 1.5rem;
+        }
+
+        /* Section color classes — cycle through these */
+        .s1 .dot {
+            background: var(--accent);
+        }
+
+        .s1 .section-header h2 {
+            color: var(--accent);
+        }
+
+        .s1 .def {
+            border-color: var(--accent);
+        }
+
+        .s2 .dot {
+            background: var(--accent2);
+        }
+
+        .s2 .section-header h2 {
+            color: var(--accent2);
+        }
+
+        .s2 .def {
+            border-color: var(--accent2);
+        }
+
+        .s3 .dot {
+            background: var(--accent3);
+        }
+
+        .s3 .section-header h2 {
+            color: var(--accent3);
+        }
+
+        .s3 .def {
+            border-color: var(--accent3);
+        }
+
+        .s4 .dot {
+            background: var(--accent4);
+        }
+
+        .s4 .section-header h2 {
+            color: var(--accent4);
+        }
+
+        .s4 .def {
+            border-color: var(--accent4);
+        }
+
+        .def {
+            background: var(--code-bg);
+            border-left: 3px solid;
+            border-radius: 0 8px 8px 0;
+            padding: 0.9rem 1.2rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .code-block {
+            background: #1e1e2e;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .code-header {
+            background: #181825;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .lang-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            color: #cdd6f4;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot-code {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-code.r {
+            background: #ff5f57;
+        }
+
+        .dot-code.y {
+            background: #febc2e;
+        }
+
+        .dot-code.g {
+            background: #28c840;
+        }
+
+        pre {
+            padding: 20px 22px;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #cdd6f4;
+            white-space: pre;
+        }
+
+        .kw {
+            color: var(--accent2);
+        }
+
+        .fn {
+            color: #4ade80;
+        }
+
+        .st {
+            color: var(--accent3);
+        }
+
+        .cm {
+            color: #5c6266;
+        }
+
+        .dc {
+            color: #fb923c;
+        }
+
+        .tp {
+            color: var(--accent);
+        }
+
+        p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 0.7rem;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        p code,
+        li code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent4);
+            background: var(--code-bg);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        ul {
+            padding-left: 1.2rem;
+            color: var(--muted);
+            font-size: 0.88rem;
+            margin-bottom: 0.6rem;
+        }
+
+        li {
+            margin-bottom: 0.3rem;
+        }
+
+        .note-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin: 0.8rem 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="tag">LangChain · Module 6 · CampusX</div>
+            <h1>Document Loaders</h1>
+            <p>Generative AI using LangChain · Complete Notes</p>
+        </header>
+
+        <div class="section s1">
+            <div class="section-header">
+                <span class="num">24</span>
+                <h2>TextLoader</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    The simplest loader that reads a standard <code>.txt</code> file and loads it as a Document. It
+                    treats the entire file content as one single document.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_community.document_loaders <span class="kw">import</span> <span class="tp">TextLoader</span>
+
+<span class="cm"># load the text file</span>
+loader = <span class="tp">TextLoader</span>(<span class="st">"example.txt"</span>)
+docs = loader.<span class="fn">load</span>()
+
+<span class="cm"># access content</span>
+<span class="fn">print</span>(docs[<span class="st">0</span>].page_content)</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>TextLoader(path)</code> → loads <code>.txt</code> → returns list with 1 Document.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s2">
+            <div class="section-header">
+                <span class="num">25</span>
+                <h2>CSVLoader</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    Loads a <code>.csv</code> file where <strong>each row</strong> becomes a separate Document. Ideally
+                    used when you want to treat every row (e.g., a product, a tweet) as an individual record.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_community.document_loaders.csv_loader <span class="kw">import</span> <span class="tp">CSVLoader</span>
+
+<span class="cm"># load csv where each row becomes a document</span>
+loader = <span class="tp">CSVLoader</span>(file_path=<span class="st">"data.csv"</span>)
+data = loader.<span class="fn">load</span>()
+
+<span class="cm"># Combine all rows into a single text block for the LLM</span>
+context = <span class="st">"\n"</span>.<span class="fn">join</span>([doc.page_content <span class="kw">for</span> doc <span class="kw">in</span> data])
+
+<span class="fn">print</span>(<span class="fn">len</span>(data)) <span class="cm"># equals number of rows</span></code></pre>
+                </div>
+                <div class="note-box">
+                    <code>CSVLoader(path)</code> → iterates rows → 1 Document per row.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s3">
+            <div class="section-header">
+                <span class="num">26</span>
+                <h2>PyPDFLoader</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    Extracts text from a PDF file. It creates one Document <strong>per page</strong>, preserving the
+                    page number in the metadata. Best for simple PDFs.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_community.document_loaders <span class="kw">import</span> <span class="tp">PyPDFLoader</span>
+
+<span class="cm"># load pdf, splits by page</span>
+loader = <span class="tp">PyPDFLoader</span>(<span class="st">"paper.pdf"</span>)
+pages = loader.<span class="fn">load</span>()
+
+<span class="cm"># access page 1 content</span>
+<span class="fn">print</span>(pages[<span class="st">0</span>].page_content)
+<span class="fn">print</span>(pages[<span class="st">0</span>].metadata) <span class="cm"># {'source': '...', 'page': 0}</span></code></pre>
+                </div>
+                <div class="note-box">
+                    <code>PyPDFLoader(path)</code> → reads PDF → 1 Document per page.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s4">
+            <div class="section-header">
+                <span class="num">27</span>
+                <h2>WebBaseLoader</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    Scrapes text from a webpage URL. It fetches the HTML, cleans it (removes tags), and loads the
+                    readable text as a Document.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_community.document_loaders <span class="kw">import</span> <span class="tp">WebBaseLoader</span>
+
+<span class="cm"># scrape a website</span>
+loader = <span class="tp">WebBaseLoader</span>(<span class="st">"https://example.com"</span>)
+docs = loader.<span class="fn">load</span>()
+
+<span class="fn">print</span>(docs[<span class="st">0</span>].page_content)</code></pre>
+                </div>
+                <div class="note-box">
+                    <code>WebBaseLoader(url)</code> → fetches HTML → extracts text → returns Document.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s1">
+            <div class="section-header">
+                <span class="num">28</span>
+                <h2>DirectoryLoader</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    Loads <strong>all files</strong> in a folder matching a pattern (like <code>*.pdf</code>). It uses a
+                    specific loader (like <code>PyPDFLoader</code>) to process each file it finds.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="kw">from</span> langchain_community.document_loaders <span class="kw">import</span> <span class="tp">DirectoryLoader</span>, <span class="tp">PyPDFLoader</span>
+
+<span class="cm"># load all PDFs in 'books' folder</span>
+loader = <span class="tp">DirectoryLoader</span>(
+    path=<span class="st">'books'</span>,        <span class="cm"># folder where files are stored</span>
+    glob=<span class="st">'*.pdf'</span>,       <span class="cm"># file pattern to match (e.g., all PDFs)</span>
+    loader_cls=<span class="tp">PyPDFLoader</span> <span class="cm"># specific loader to use for each file found</span>
+)
+docs = loader.<span class="fn">load</span>()</code></pre>
+                </div>
+                <p><strong>Common Glob Patterns:</strong></p>
+                <ul>
+                    <li><code>*.pdf</code> → Only PDFs in the main folder.</li>
+                    <li><code>**/*.pdf</code> → PDFs in the main folder <strong>and all subfolders</strong> (recursive).
+                    </li>
+                    <li><code>**/*.txt</code> → All Text files recursively.</li>
+                    <li><code>*.*</code> → Every file in the main folder.</li>
+                </ul>
+                <div class="note-box">
+                    <code>DirectoryLoader(path, glob)</code> → finds files → delegates to <code>loader_cls</code> →
+                    aggregated docs.
+                </div>
+            </div>
+        </div>
+
+        <div class="section s2">
+            <div class="section-header">
+                <span class="num">29</span>
+                <h2>Lazy Loading</h2>
+                <div class="dot"></div>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    Instead of loading ALL documents into memory at once (which crashes RAM with big datasets),
+                    <code>lazy_load()</code> yields documents <strong>one by one</strong>. You process the current
+                    document and discard it before moving to the next.
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="cm"># standard load - high memory usage</span>
+<span class="cm"># docs = loader.load()</span>
+
+<span class="cm"># DirectoryLoader supports lazy_load() which returns a generator</span>
+<span class="cm"># lazy load - efficient memory usage</span>
+docs_generator = loader.<span class="fn">lazy_load</span>()
+
+<span class="kw">for</span> doc <span class="kw">in</span> docs_generator:
+    <span class="fn">print</span>(doc.page_content)
+    <span class="cm"># process doc here, then it frees memory</span></code></pre>
+                </div>
+                <div class="note-box">
+                    <code>lazy_load()</code> → returns generator → yields 1 doc at a time → saves RAM.
+                </div>
+            </div>
+        </div>
+
+        <footer>Document Loaders · Module 6 · CampusX · Generative AI Series</footer>
+    </div>
+</body>
+
+</html>
