@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tools in LangChain — Notes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #1e2326;
+            --surface: #272e33;
+            --surface2: #2e383c;
+            --border: #3c4841;
+            --green: #a7c080;
+            --green-dim: #2d342d;
+            --blue: #7fbbb3;
+            --blue-dim: #253333;
+            --red: #e67e80;
+            --red-dim: #3a2a2a;
+            --yellow: #dbbc7e;
+            --yellow-dim: #3a342a;
+            --purple: #d699b6;
+            --purple-dim: #352a35;
+            --text: #d3c6aa;
+            --muted: #859289;
+            --code-bg: #232a2e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+            padding: 40px 20px 80px;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            margin-bottom: 50px;
+            border-left: 4px solid var(--green);
+            padding-left: 20px;
+        }
+
+        header .tag {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--green);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        header p {
+            color: var(--muted);
+            margin-top: 6px;
+            font-size: 14px;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 36px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            animation: fadeUp 0.4s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section:nth-child(1) {
+            animation-delay: 0.05s
+        }
+
+        .section:nth-child(2) {
+            animation-delay: 0.1s
+        }
+
+        .section:nth-child(3) {
+            animation-delay: 0.15s
+        }
+
+        .section:nth-child(4) {
+            animation-delay: 0.2s
+        }
+
+        .section:nth-child(5) {
+            animation-delay: 0.25s
+        }
+
+        .section:nth-child(6) {
+            animation-delay: 0.3s
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 22px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+
+        .section-header .num {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            min-width: 24px;
+        }
+
+        .section-header h2 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 0.3px;
+        }
+
+        .section-header .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .dot-green {
+            background: var(--green);
+        }
+
+        .dot-blue {
+            background: var(--blue);
+        }
+
+        .dot-red {
+            background: var(--red);
+        }
+
+        .dot-yellow {
+            background: var(--yellow);
+        }
+
+        .dot-purple {
+            background: var(--purple);
+        }
+
+        .section-body {
+            padding: 20px 22px;
+        }
+
+        /* Definition box */
+        .def {
+            background: var(--surface2);
+            border-left: 3px solid var(--green);
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .def.blue {
+            border-color: var(--blue);
+        }
+
+        .def.red {
+            border-color: var(--red);
+        }
+
+        .def.yellow {
+            border-color: var(--yellow);
+        }
+
+        /* Flow diagram */
+        .flow {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 14px 0;
+        }
+
+        .flow-box {
+            background: var(--green-dim);
+            border: 1px solid var(--green);
+            color: var(--green);
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .flow-box.blue {
+            background: var(--blue-dim);
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        .flow-arrow {
+            color: var(--muted);
+            font-size: 18px;
+        }
+
+        /* Grid */
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 14px 0;
+        }
+
+        .card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+        }
+
+        .card h4 {
+            font-size: 13px;
+            color: var(--green);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card h4.red {
+            color: var(--red);
+        }
+
+        .card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .card ul li {
+            font-size: 13px;
+            color: var(--muted);
+            padding: 3px 0;
+        }
+
+        .card ul li::before {
+            content: "·  ";
+            color: var(--muted);
+        }
+
+        /* Table-style tool list */
+        .tool-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 13px;
+        }
+
+        .tool-table tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tool-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .tool-table td {
+            padding: 9px 12px;
+            vertical-align: top;
+        }
+
+        .tool-table td:first-child {
+            font-family: 'Space Mono', monospace;
+            font-size: 11.5px;
+            color: var(--red);
+            white-space: nowrap;
+            width: 40%;
+        }
+
+        .tool-table td:last-child {
+            color: var(--muted);
+        }
+
+        /* Code block */
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin: 12px 0;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            line-height: 1.8;
+            overflow-x: auto;
+            color: var(--text);
+        }
+
+        .kw {
+            color: var(--purple);
+        }
+
+        .fn {
+            color: var(--blue);
+        }
+
+        .cls {
+            color: var(--yellow);
+        }
+
+        .str {
+            color: var(--green);
+        }
+
+        .cm {
+            color: #5c6266;
+        }
+
+        .dec {
+            color: var(--yellow);
+        }
+
+        /* Method cards */
+        .method {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        .method-title {
+            background: var(--surface2);
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--blue);
+            font-family: 'Space Mono', monospace;
+            letter-spacing: 0.3px;
+        }
+
+        .method-body {
+            padding: 14px 16px;
+        }
+
+        .method-body p {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        /* Agent diagram */
+        .agent-diagram {
+            background: #14291e;
+            border: 1px solid #2d5a3f;
+            border-radius: 10px;
+            padding: 18px;
+            margin: 14px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .agent-label {
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .agent-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .agent-box {
+            flex: 1;
+            background: var(--green-dim);
+            border: 1px solid var(--green);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--green);
+        }
+
+        .agent-footer {
+            display: flex;
+            gap: 14px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .agent-footer span {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        /* Toolkit grid */
+        .toolkit-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .toolkit-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 13px;
+        }
+
+        .toolkit-item .tname {
+            font-family: 'Space Mono', monospace;
+            color: var(--red);
+            font-size: 11.5px;
+            min-width: 200px;
+        }
+
+        .toolkit-item .tdesc {
+            color: var(--muted);
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'Space Mono', monospace;
+            margin-right: 4px;
+        }
+
+        .badge-green {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .badge-blue {
+            background: var(--blue-dim);
+            color: var(--blue);
+        }
+
+        p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        @media(max-width: 600px) {
+            .grid2 {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-box {
+                padding: 7px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <header>
+            <div class="tag">LangChain · Module 10 · CampusX</div>
+            <h1>Tools in LangChain</h1>
+            <p>Concise notes covering tools, tool calling, agents, built-in tools, custom tools & toolkits.</p>
+        </header>
+
+        <!-- 1. Overview -->
+        <div class="section">
+            <div class="section-header">
+                <span class="num">56</span>
+                <h2>Overview</h2>
+                <span class="dot dot-green"></span>
+            </div>
+            <div class="section-body">
+                <p>The core pipeline in LangChain moves from individual tools through tool calling to full autonomous
+                    agents.</p>
+                <div class="flow">
+                    <div class="flow-box">Tools</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-box">Tool Calling</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-box">Agents</div>
+                </div>
+                <div class="def">
+                    <strong>Tool Calling</strong> = Tool + LLM working together — the LLM decides <em>when</em> and
+                    <em>how</em> to call a tool.
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. What is a Tool? -->
+        <div class="section">
+            <div class="section-header">
+                <span class="num">57</span>
+                <h2>What is a Tool?</h2>
+                <span class="dot dot-blue"></span>
+            </div>
+            <div class="section-body">
+                <div class="def blue">
+                    A tool is a <strong>Python function (or API)</strong> packaged in a way the LLM can understand and
+                    call when needed.
+                </div>
+
+                <div class="grid2">
+                    <div class="card">
+                        <h4>✓ LLMs are great at</h4>
+                        <ul>
+                            <li>Reasoning (Think)</li>
+                            <li>Language generation (Speak)</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4 class="red">✗ LLMs can't do</h4>
+                        <ul>
+                            <li>Access live data (weather, news)</li>
+                            <li>Do reliable math</li>
+                            <li>Call external APIs</li>
+                            <li>Run code</li>
+                            <li>Interact with a database</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <p style="margin-top:8px;">Tools bridge the gap — giving LLMs real-world capabilities.</p>
+                <div class="flow" style="margin-top:10px;">
+                    <div class="flow-box">Built-in Tools</div>
+                    <div class="flow-arrow" style="transform:none; color:#4ade80;">+</div>
+                    <div class="flow-box">Custom Tools</div>
+                </div>
+
+                <div class="agent-diagram" style="margin-top:16px;">
+                    <div class="agent-label">AGENT ECOSYSTEM</div>
+                    <div class="agent-row">
+                        <div class="agent-box">Reasoning &amp;<br>Decision Making</div>
+                        <div class="agent-box">Action</div>
+                    </div>
+                    <div class="agent-footer">
+                        <span>LLM</span> handles reasoning &nbsp;|&nbsp; <span>Tools</span> handle actions
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Built-in Tools -->
+        <div class="section">
+            <div class="section-header">
+                <span class="num">58</span>
+                <h2>Built-in Tools</h2>
+                <span class="dot dot-red"></span>
+            </div>
+            <div class="section-body">
+                <div class="def red">
+                    Pre-built, production-ready tools provided by LangChain. <strong>Just import and use</strong> — no
+                    function logic needed.
+                </div>
+                <table class="tool-table">
+                    <tr>
+                        <td>DuckDuckGoSearchRun</td>
+                        <td>Web search via DuckDuckGo</td>
+                    </tr>
+                    <tr>
+                        <td>WikipediaQueryRun</td>
+                        <td>Wikipedia summary lookup</td>
+                    </tr>
+                    <tr>
+                        <td>PythonREPLTool</td>
+                        <td>Run raw Python code</td>
+                    </tr>
+                    <tr>
+                        <td>ShellTool</td>
+                        <td>Run shell commands</td>
+                    </tr>
+                    <tr>
+                        <td>RequestsGetTool</td>
+                        <td>Make HTTP GET requests</td>
+                    </tr>
+                    <tr>
+                        <td>GmailSendMessageTool</td>
+                        <td>Send emails via Gmail</td>
+                    </tr>
+                    <tr>
+                        <td>SlackSendMessageTool</td>
+                        <td>Post messages to Slack</td>
+                    </tr>
+                    <tr>
+                        <td>SQLDatabaseQueryTool</td>
+                        <td>Run SQL queries</td>
+                    </tr>
+                </table>
+                <div class="code-block">
+                    <span class="cm"># DuckDuckGo Search Example</span>
+                    <span class="kw">from</span> langchain_community.tools <span class="kw">import</span> <span
+                        class="cls">DuckDuckGoSearchRun</span>
+                    search_tool = <span class="fn">DuckDuckGoSearchRun</span>()
+                    results = search_tool.<span class="fn">invoke</span>(<span class="str">'top news in india
+                        today'</span>)
+
+                    <span class="cm"># Shell Tool Example</span>
+                    <span class="kw">from</span> langchain_community.tools <span class="kw">import</span> <span
+                        class="cls">ShellTool</span>
+                    shell_tool = <span class="fn">ShellTool</span>()
+                    results = shell_tool.<span class="fn">invoke</span>(<span class="str">'whoami'</span>)
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Custom Tools -->
+        <div class="section">
+            <div class="section-header">
+                <span class="num">59</span>
+                <h2>Custom Tools</h2>
+                <span class="dot dot-yellow"></span>
+            </div>
+            <div class="section-body">
+                <div class="def yellow">
+                    A custom tool is a <strong>tool you define yourself</strong> for your specific use case.
+                </div>
+                <p><strong>Use custom tools when:</strong></p>
+                <div class="card" style="margin-bottom:14px;">
+                    <ul>
+                        <li>You want to call <strong>your own APIs</strong></li>
+                        <li>You want to encapsulate <strong>business logic</strong></li>
+                        <li>You want the LLM to interact with your <strong>database, product, or app</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Ways to Create Custom Tools -->
+        <div class="section">
+            <div class="section-header">
+                <span class="num">60</span>
+                <h2>Ways to Create Custom Tools</h2>
+                <span class="dot dot-purple"></span>
+            </div>
+            <div class="section-body">
+
+                <div class="method">
+                    <div class="method-title">Method 1 — @tool Decorator</div>
+                    <div class="method-body">
+                        <p>Simplest approach. Add <code style="color:var(--yellow)">@tool</code> decorator to any
+                            function with type hints and a docstring.</p>
+                        <div class="code-block">
+                            <span class="dec">@tool</span>
+                            <span class="kw">def</span> <span class="fn">multiply</span>(a: <span
+                                class="cls">int</span>, b: <span class="cls">int</span>) -> <span
+                                class="cls">int</span>:
+                            <span class="str">"""Multiply two numbers"""</span>
+                            <span class="kw">return</span> a * b
+
+                            result = multiply.<span class="fn">invoke</span>({<span class="str">"a"</span>: 3, <span
+                                class="str">"b"</span>: 5})
+                            <span class="cm"># Exposes: .name, .description, .args</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="method">
+                    <div class="method-title">Method 2 — StructuredTool + Pydantic</div>
+                    <div class="method-body">
+                        <p>Use when you need rich input schema with field descriptions. Define a Pydantic model then
+                            pass it to <code style="color:var(--blue)">StructuredTool.from_function()</code>.</p>
+                        <div class="code-block">
+                            <span class="kw">from</span> langchain.tools <span class="kw">import</span> <span
+                                class="cls">StructuredTool</span>
+                            <span class="kw">from</span> pydantic <span class="kw">import</span> <span
+                                class="cls">BaseModel</span>, <span class="cls">Field</span>
+
+                            <span class="kw">class</span> <span class="cls">MultiplyInput</span>(<span
+                                class="cls">BaseModel</span>):
+                            a: <span class="cls">int</span> = <span class="fn">Field</span>(required=<span
+                                class="kw">True</span>, description=<span class="str">"The first number"</span>)
+                            b: <span class="cls">int</span> = <span class="fn">Field</span>(required=<span
+                                class="kw">True</span>, description=<span class="str">"The second number"</span>)
+
+                            <span class="kw">def</span> <span class="fn">multiply_func</span>(a: <span
+                                class="cls">int</span>, b: <span class="cls">int</span>) -> <span
+                                class="cls">int</span>:
+                            <span class="kw">return</span> a * b
+
+                            multiply_tool = <span class="cls">StructuredTool</span>.<span
+                                class="fn">from_function</span>(
+                            func=multiply_func,
+                            name=<span class="str">"multiply"</span>,
+                            description=<span class="str">"Multiply two numbers"</span>,
+                            args_schema=<span class="cls">MultiplyInput</span>
+                            )
+                        </div>
+                    </div>
+                </div>
+
+                <div class="method">
+                    <div class="method-title">Method 3 — BaseTool Class</div>
+                    <div class="method-body">
+                        <p><strong>BaseTool</strong> is the abstract base class for all tools in LangChain. <code
+                                style="color:var(--blue)">@tool</code> and <code
+                                style="color:var(--blue)">StructuredTool</code> are both built on top of it. Use for
+                            maximum control and customization.</p>
+                        <div class="code-block">
+                            <span class="kw">from</span> langchain.tools <span class="kw">import</span> <span
+                                class="cls">BaseTool</span>
+                            <span class="kw">from</span> typing <span class="kw">import</span> <span
+                                class="cls">Type</span>
+
+                            <span class="kw">class</span> <span class="cls">MultiplyTool</span>(<span
+                                class="cls">BaseTool</span>):
+                            name: <span class="cls">str</span> = <span class="str">"multiply"</span>
+                            description: <span class="cls">str</span> = <span class="str">"Multiply two numbers"</span>
+                            args_schema: <span class="cls">Type</span>[<span class="cls">BaseModel</span>] = <span
+                                class="cls">MultiplyInput</span>
+
+                            <span class="kw">def</span> <span class="fn">_run</span>(self, a: <span
+                                class="cls">int</span>, b: <span class="cls">int</span>) -> <span
+                                class="cls">int</span>:
+                            <span class="kw">return</span> a * b
+
+                            multiply_tool = <span class="fn">MultiplyTool</span>()
+                            result = multiply_tool.<span class="fn">invoke</span>({<span class="str">'a'</span>: 3,
+                            <span class="str">'b'</span>: 3})
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 6. Toolkits -->
+        <div class="section">
+            <div class="section-header">
+                <span class="num">61</span>
+                <h2>Toolkits</h2>
+                <span class="dot dot-green"></span>
+            </div>
+            <div class="section-body">
+                <div class="def">
+                    A toolkit is a <strong>collection (bundle) of related tools</strong> that serve a common purpose —
+                    packaged for convenience and reusability.
+                </div>
+                <p><strong>Example:</strong> <code
+                        style="color:var(--yellow); font-family:'Space Mono',monospace; font-size:12px;">GoogleDriveToolKit</code>
+                </p>
+                <div class="toolkit-grid">
+                    <div class="toolkit-item">
+                        <span class="tname">GoogleDriveCreateFileTool</span>
+                        <span class="tdesc">Upload a file</span>
+                    </div>
+                    <div class="toolkit-item">
+                        <span class="tname">GoogleDriveSearchTool</span>
+                        <span class="tdesc">Search for a file by name/content</span>
+                    </div>
+                    <div class="toolkit-item">
+                        <span class="tname">GoogleDriveReadFileTool</span>
+                        <span class="tdesc">Read contents of a file</span>
+                    </div>
+                </div>
+
+                <div class="code-block" style="margin-top:16px;">
+                    <span class="cm"># Creating a custom toolkit</span>
+                    <span class="kw">class</span> <span class="cls">MathToolkit</span>:
+                    <span class="kw">def</span> <span class="fn">get_tools</span>(self):
+                    <span class="kw">return</span> [add, multiply] <span class="cm"># list of @tool functions</span>
+
+                    toolkit = <span class="fn">MathToolkit</span>()
+                    tools = toolkit.<span class="fn">get_tools</span>()
+
+                    <span class="kw">for</span> tool <span class="kw">in</span> tools:
+                    <span class="fn">print</span>(tool.name, <span class="str">"=>"</span>, tool.description)
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

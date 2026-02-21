@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agents in LangChain — Video 18</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Bricolage+Grotesque:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #1e2326;
+            --surface: #272e33;
+            --surface2: #2e383c;
+            --surface3: #343f44;
+            --border: #3c4841;
+            --border2: #47524a;
+            --text: #d3c6aa;
+            --muted: #859289;
+            --muted2: #9da9a0;
+
+            --blue: #7fbbb3;
+            --blue-dim: rgba(127, 187, 179, 0.1);
+            --green: #a7c080;
+            --green-dim: rgba(167, 192, 128, 0.1);
+            --orange: #dbbc7e;
+            --orange-dim: rgba(219, 188, 126, 0.1);
+            --pink: #d699b6;
+            --pink-dim: rgba(214, 153, 182, 0.1);
+            --yellow: #dbbc7e;
+            --yellow-dim: rgba(219, 188, 126, 0.1);
+            --purple: #d699b6;
+            --purple-dim: rgba(214, 153, 182, 0.1);
+            --teal: #7fbbb3;
+            --teal-dim: rgba(127, 187, 179, 0.1);
+            --red: #e67e80;
+            --red-dim: rgba(230, 126, 128, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* ── HERO ───────────────────────────── */
+        .hero {
+            background: linear-gradient(135deg, #1e2326 0%, #272e33 50%, #1e2326 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 5rem 2rem 4rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(127, 187, 179, 0.08) 0%, transparent 70%);
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--blue);
+            border: 1px solid var(--blue-dim);
+            background: rgba(79, 142, 247, 0.06);
+            padding: 0.3rem 1rem;
+            border-radius: 100px;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 {
+            font-family: 'Clash Display', sans-serif;
+            font-size: clamp(2.2rem, 5vw, 4rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #d3c6aa 30%, #7fbbb3 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .hero-sub {
+            font-size: 0.95rem;
+            color: var(--muted2);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .hero-pills {
+            display: flex;
+            justify-content: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            border: 1px solid var(--border2);
+            color: var(--muted2);
+            background: var(--surface);
+        }
+
+        /* ── LAYOUT ───────────────────────── */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+
+        /* ── TOPIC CARD ───────────────────── */
+        .topic {
+            margin-bottom: 3rem;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--surface);
+            animation: fadeUp 0.4s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .topic-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+
+        .topic-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--muted);
+            min-width: 2rem;
+        }
+
+        .topic-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+
+        .topic-header h2 {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .topic-body {
+            padding: 1.5rem;
+        }
+
+        /* accent colors */
+        .t1 .topic-icon {
+            background: rgba(79, 142, 247, 0.15);
+        }
+
+        .t1 .topic-header h2 {
+            color: var(--blue);
+        }
+
+        .t2 .topic-icon {
+            background: rgba(62, 207, 142, 0.15);
+        }
+
+        .t2 .topic-header h2 {
+            color: var(--green);
+        }
+
+        .t3 .topic-icon {
+            background: rgba(247, 147, 79, 0.15);
+        }
+
+        .t3 .topic-header h2 {
+            color: var(--orange);
+        }
+
+        .t4 .topic-icon {
+            background: rgba(155, 107, 247, 0.15);
+        }
+
+        .t4 .topic-header h2 {
+            color: var(--purple);
+        }
+
+        .t5 .topic-icon {
+            background: rgba(224, 107, 188, 0.15);
+        }
+
+        .t5 .topic-header h2 {
+            color: var(--pink);
+        }
+
+        .t6 .topic-icon {
+            background: rgba(247, 212, 79, 0.15);
+        }
+
+        .t6 .topic-header h2 {
+            color: var(--yellow);
+        }
+
+        .t7 .topic-icon {
+            background: rgba(79, 212, 247, 0.15);
+        }
+
+        .t7 .topic-header h2 {
+            color: var(--teal);
+        }
+
+        .t8 .topic-icon {
+            background: rgba(62, 207, 142, 0.15);
+        }
+
+        .t8 .topic-header h2 {
+            color: var(--green);
+        }
+
+        .t9 .topic-icon {
+            background: rgba(79, 142, 247, 0.15);
+        }
+
+        .t9 .topic-header h2 {
+            color: var(--blue);
+        }
+
+        .t10 .topic-icon {
+            background: rgba(247, 147, 79, 0.15);
+        }
+
+        .t10 .topic-header h2 {
+            color: var(--orange);
+        }
+
+        .t11 .topic-icon {
+            background: rgba(155, 107, 247, 0.15);
+        }
+
+        .t11 .topic-header h2 {
+            color: var(--purple);
+        }
+
+        /* ── TEXT ELEMENTS ─────────────────── */
+        .def {
+            background: var(--surface2);
+            border-left: 3px solid;
+            border-radius: 0 8px 8px 0;
+            padding: 0.9rem 1.2rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.2rem;
+            color: var(--text);
+            line-height: 1.65;
+        }
+
+        .t1 .def {
+            border-color: var(--blue);
+        }
+
+        .t2 .def {
+            border-color: var(--green);
+        }
+
+        .t3 .def {
+            border-color: var(--orange);
+        }
+
+        .t4 .def {
+            border-color: var(--purple);
+        }
+
+        .t5 .def {
+            border-color: var(--pink);
+        }
+
+        .t6 .def {
+            border-color: var(--yellow);
+        }
+
+        .t7 .def {
+            border-color: var(--teal);
+        }
+
+        .t8 .def {
+            border-color: var(--green);
+        }
+
+        .t9 .def {
+            border-color: var(--blue);
+        }
+
+        .t10 .def {
+            border-color: var(--orange);
+        }
+
+        .t11 .def {
+            border-color: var(--purple);
+        }
+
+        p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 0.8rem;
+        }
+
+        p strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.1rem 1.2rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.77rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            background: var(--surface3);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            color: var(--teal);
+        }
+
+        .kw {
+            color: #60a5fa;
+        }
+
+        .fn {
+            color: #4ade80;
+        }
+
+        .st {
+            color: #f9a8d4;
+        }
+
+        .cm {
+            color: #5c6266;
+        }
+
+        .dc {
+            color: #fb923c;
+        }
+
+        .tp {
+            color: #a78bfa;
+        }
+
+        .nu {
+            color: #fbbf24;
+        }
+
+        .url {
+            color: #4ade80;
+        }
+
+        /* ── GRID CARDS ───────────────────── */
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .grid3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        @media(max-width:600px) {
+
+            .grid2,
+            .grid3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.1rem;
+        }
+
+        .card h4 {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.5rem;
+        }
+
+        .card p,
+        .card li {
+            font-size: 0.83rem;
+            color: var(--muted);
+        }
+
+        .card ul {
+            padding-left: 1.1rem;
+        }
+
+        .card li {
+            margin-bottom: 0.2rem;
+        }
+
+        /* ── PROPERTY BADGES ──────────────── */
+        .props {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .prop-badge {
+            display: flex;
+            flex-direction: column;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.7rem 1rem;
+            min-width: 130px;
+            flex: 1;
+        }
+
+        .prop-badge .prop-icon {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .prop-badge .prop-name {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .prop-badge .prop-desc {
+            font-size: 0.75rem;
+            color: var(--muted2);
+            margin-top: 0.2rem;
+        }
+
+        /* ── STEP LIST ────────────────────── */
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .step {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.7rem 1rem;
+            font-size: 0.87rem;
+        }
+
+        .step-n {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--muted);
+            min-width: 1.4rem;
+            padding-top: 0.15rem;
+        }
+
+        .step strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .step p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        /* ── FORMULA BOX ──────────────────── */
+        .formula {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+            padding: 1.5rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1.2rem;
+        }
+
+        .formula-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--surface3);
+            border: 1px solid var(--border2);
+            border-radius: 10px;
+            padding: 0.8rem 1.4rem;
+            min-width: 110px;
+        }
+
+        .formula-box .fb-icon {
+            font-size: 1.6rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .formula-box .fb-label {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .formula-op {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--muted2);
+        }
+
+        /* ── REACT LOOP DIAGRAM ───────────── */
+        .react-loop {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0;
+            padding: 1.5rem 1rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1.2rem;
+            position: relative;
+        }
+
+        .loop-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--surface3);
+            border: 1px solid;
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            min-width: 90px;
+            text-align: center;
+        }
+
+        .loop-node .ln-label {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .loop-node .ln-sub {
+            font-size: 0.68rem;
+            color: var(--muted2);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 0.2rem;
+        }
+
+        .loop-arrow {
+            font-size: 1.2rem;
+            color: var(--muted);
+            padding: 0 0.3rem;
+        }
+
+        .loop-repeat {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--orange);
+            text-align: center;
+            width: 100%;
+            margin-top: 0.8rem;
+            padding: 0.3rem;
+            border: 1px dashed var(--orange-dim);
+            border-radius: 6px;
+            background: rgba(247, 147, 79, 0.05);
+        }
+
+        /* ── FLOWCHART DIAGRAM ────────────── */
+        .flowchart {
+            padding: 1.5rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1.2rem;
+        }
+
+        .fc-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--muted2);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 1.2rem;
+        }
+
+        .fc-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        .fc-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 0;
+        }
+
+        .fc-node {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            padding: 0.55rem 1.1rem;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+            border: 1.5px solid;
+            min-width: 150px;
+            white-space: nowrap;
+        }
+
+        .fc-diamond {
+            width: 130px;
+            height: 60px;
+            transform: rotate(0deg);
+            background: var(--yellow-dim);
+            border: 1.5px solid var(--yellow);
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--yellow);
+            margin: 0.5rem 0;
+        }
+
+        .fc-arrow {
+            width: 2px;
+            height: 30px;
+            background: var(--border2);
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .fc-arrow::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: -4px;
+            border: 5px solid transparent;
+            border-top: 7px solid var(--border2);
+        }
+
+        .fc-arrow-h {
+            height: 2px;
+            width: 50px;
+            background: var(--border2);
+            position: relative;
+            align-self: center;
+        }
+
+        .fc-arrow-h::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: -4px;
+            border: 5px solid transparent;
+            border-left: 7px solid var(--border2);
+        }
+
+        .fc-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--muted2);
+            text-align: center;
+            margin-bottom: 0.3rem;
+        }
+
+        .fc-blue {
+            background: var(--blue-dim);
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        .fc-green {
+            background: var(--green-dim);
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .fc-orange {
+            background: var(--orange-dim);
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+
+        .fc-pink {
+            background: var(--pink-dim);
+            border-color: var(--pink);
+            color: var(--pink);
+        }
+
+        .fc-teal {
+            background: var(--teal-dim);
+            border-color: var(--teal);
+            color: var(--teal);
+        }
+
+        .fc-purple {
+            background: var(--purple-dim);
+            border-color: var(--purple);
+            color: var(--purple);
+        }
+
+        /* ── PROMPT TEMPLATE BOX ──────────── */
+        .prompt-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.77rem;
+            line-height: 2;
+            margin-bottom: 1rem;
+        }
+
+        .prompt-label {
+            color: var(--orange);
+        }
+
+        .prompt-value {
+            color: var(--text);
+        }
+
+        .prompt-var {
+            color: var(--purple);
+        }
+
+        .prompt-meta {
+            color: var(--muted2);
+        }
+
+        /* ── WALKTHROUGH ──────────────────── */
+        .walkthrough {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .wt-step {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid;
+            font-size: 0.85rem;
+        }
+
+        .wt-step.thought {
+            background: rgba(155, 107, 247, 0.06);
+            border-color: var(--purple-dim);
+        }
+
+        .wt-step.action {
+            background: rgba(79, 142, 247, 0.06);
+            border-color: var(--blue-dim);
+        }
+
+        .wt-step.observe {
+            background: rgba(62, 207, 142, 0.06);
+            border-color: var(--green-dim);
+        }
+
+        .wt-step.finish {
+            background: rgba(62, 207, 142, 0.12);
+            border-color: var(--green);
+        }
+
+        .wt-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        .wt-step.thought .wt-badge {
+            background: var(--purple-dim);
+            color: var(--purple);
+        }
+
+        .wt-step.action .wt-badge {
+            background: var(--blue-dim);
+            color: var(--blue);
+        }
+
+        .wt-step.observe .wt-badge {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .wt-step.finish .wt-badge {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .wt-step p {
+            margin: 0;
+        }
+
+        /* ── AGENT OBJ BOX ────────────────── */
+        .obj-box {
+            background: #060709;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.9rem 1.1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.77rem;
+            line-height: 1.9;
+            margin-bottom: 0.8rem;
+        }
+
+        .obj-name {
+            color: var(--blue);
+        }
+
+        .obj-key {
+            color: var(--orange);
+        }
+
+        .obj-val {
+            color: #b8c3de;
+        }
+
+        .obj-note {
+            color: var(--muted2);
+            font-style: italic;
+        }
+
+        /* ── TRAVEL DEMO ──────────────────── */
+        .travel-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .travel-step {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.9rem 1.1rem;
+        }
+
+        .travel-step-icon {
+            font-size: 1.3rem;
+            min-width: 2rem;
+            text-align: center;
+            padding-top: 0.1rem;
+        }
+
+        .travel-step-body h4 {
+            font-family: 'Clash Display', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.2rem;
+        }
+
+        .travel-step-body p {
+            font-size: 0.82rem;
+            margin: 0;
+        }
+
+        .budget-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.84rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .budget-table tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .budget-table td {
+            padding: 0.5rem 0.7rem;
+            color: #8a96b8;
+        }
+
+        .budget-table td:last-child {
+            text-align: right;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .budget-table tr:last-child td {
+            color: var(--green);
+            font-weight: 600;
+            border-bottom: none;
+        }
+
+        /* ── DIVIDER ──────────────────────── */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border2), transparent);
+            margin: 1.2rem 0;
+        }
+
+        /* ── INLINE NOTE ──────────────────── */
+        .note {
+            display: flex;
+            gap: 0.7rem;
+            align-items: flex-start;
+            background: rgba(247, 212, 79, 0.05);
+            border: 1px solid rgba(247, 212, 79, 0.2);
+            border-radius: 8px;
+            padding: 0.7rem 1rem;
+            font-size: 0.83rem;
+            color: #a89e70;
+            margin-bottom: 1rem;
+        }
+
+        .note-icon {
+            flex-shrink: 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2.5rem 0;
+            border-top: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-tag">📹 Module 12 · CampusX</div>
+        <h1>Building End-to-End<br>AI Agents in LangChain</h1>
+        <div class="hero-sub">Generative AI using LangChain · Complete Notes</div>
+        <div class="hero-pills">
+            <span class="pill">AI Agent</span>
+            <span class="pill">ReAct Pattern</span>
+            <span class="pill">AgentExecutor</span>
+            <span class="pill">Tool Calling</span>
+            <span class="pill">Multi-Tool Agent</span>
+            <span class="pill">LangChain Hub</span>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- ═══════════════════════════════════════════
+     TOPIC 1 — AI AGENT DEMO
+═══════════════════════════════════════════ -->
+        <div class="topic t1">
+            <div class="topic-header">
+                <span class="topic-num">69</span>
+                <div class="topic-icon">🌍</div>
+                <h2>AI Agent Demo — Travel Planning</h2>
+            </div>
+            <div class="topic-body">
+                <div class="def">A real-world demo showing an <strong>AI Travel Agent</strong> that autonomously plans
+                    an entire Delhi → Goa trip from a single high-level request — no step-by-step instructions needed.
+                </div>
+                <div class="travel-steps">
+                    <div class="travel-step">
+                        <div class="travel-step-icon">🚕</div>
+                        <div class="travel-step-body">
+                            <h4>Step 1 — Cab Booking</h4>
+                            <p>Searches MakeMyTrip for outstation cabs, compares options from source to destination.</p>
+                        </div>
+                    </div>
+                    <div class="travel-step">
+                        <div class="travel-step-icon">🚆</div>
+                        <div class="travel-step-body">
+                            <h4>Step 2 — Research Transport</h4>
+                            <p>Queries IRCTC + Flight APIs. Compares price, duration, availability. Decision: <strong
+                                    style="color:var(--green)">Goa Express 3AC ₹1500</strong> (Apr 30 night → Goa May 1
+                                evening).</p>
+                        </div>
+                    </div>
+                    <div class="travel-step">
+                        <div class="travel-step-icon">🏨</div>
+                        <div class="travel-step-body">
+                            <h4>Step 3 — Search Affordable Stay</h4>
+                            <p>Uses hotel API. Filters: price &lt;₹700/night, near Baga/Anjuna beach, good ratings.
+                                Result: <strong style="color:var(--green)">The Hosteller Baga — ₹650/night</strong> for
+                                6 nights.</p>
+                        </div>
+                    </div>
+                    <div class="travel-step">
+                        <div class="travel-step-icon">🗺️</div>
+                        <div class="travel-step-body">
+                            <h4>Step 4 — Day-by-Day Itinerary</h4>
+                            <p>May 2: Baga, Calangute, Aguada Fort · May 3: Old Goa churches, Fontainhas · May 4: South
+                                Goa (Palolem) · May 5: Anjuna flea market + Chapora sunset · May 6: Free day + beach
+                                cafe</p>
+                        </div>
+                    </div>
+                    <div class="travel-step">
+                        <div class="travel-step-icon">🔁</div>
+                        <div class="travel-step-body">
+                            <h4>Step 5 — Return Journey</h4>
+                            <p>Compares Train (₹800–11500, overnight) vs SpiceJet flight (₹2800, 6AM). User picks:
+                                <strong style="color:var(--green)">Train</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h4 style="color:var(--green)">💰 Budget Summary (Auto-generated)</h4>
+                    <table class="budget-table">
+                        <tr>
+                            <td>Train (round trip)</td>
+                            <td>₹3,000</td>
+                        </tr>
+                        <tr>
+                            <td>Stay (6 nights)</td>
+                            <td>₹3,900</td>
+                        </tr>
+                        <tr>
+                            <td>Scooter + fuel</td>
+                            <td>₹2,200</td>
+                        </tr>
+                        <tr>
+                            <td>Food (local + budget)</td>
+                            <td>₹2,500</td>
+                        </tr>
+                        <tr>
+                            <td>Sightseeing & entry</td>
+                            <td>₹1,000</td>
+                        </tr>
+                        <tr>
+                            <td>Shopping/misc</td>
+                            <td>₹1,500</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total</strong></td>
+                            <td><strong>₹14,100</strong></td>
+                        </tr>
+                    </table>
+                    <p style="font-size:0.8rem;">After confirmation: bookings confirmed ✅ · receipt emailed · calendar
+                        invite for train · daily reminders during stay</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+     TOPIC 2 — WHAT IS AN AI AGENT
+═══════════════════════════════════════════ -->
+        <div class="topic t2">
+            <div class="topic-header">
+                <span class="topic-num">70</span>
+                <div class="topic-icon">🤖</div>
+                <h2>What is an AI Agent?</h2>
+            </div>
+            <div class="topic-body">
+                <div class="def">An AI agent is an <strong>intelligent system</strong> that receives a high-level goal
+                    from a user, and autonomously plans, decides, and executes a sequence of actions using external
+                    tools, APIs, or knowledge sources — while maintaining context, reasoning over multiple steps,
+                    adapting to new information, and optimizing for the intended outcome.</div>
+
+                <div class="formula">
+                    <div class="formula-box">
+                        <div class="fb-icon">🧠</div>
+                        <div class="fb-label" style="color:var(--blue)">LLM</div>
+                        <div style="font-size:0.72rem;color:var(--muted2);margin-top:0.2rem;">Reasoning Brain</div>
+                    </div>
+                    <div class="formula-op">+</div>
+                    <div class="formula-box">
+                        <div class="fb-icon">🔧</div>
+                        <div class="fb-label" style="color:var(--orange)">TOOLS</div>
+                        <div style="font-size:0.72rem;color:var(--muted2);margin-top:0.2rem;">APIs · DBs · Search</div>
+                    </div>
+                    <div class="formula-op">=</div>
+                    <div class="formula-box" style="border-color:var(--green); background:var(--green-dim);">
+                        <div class="fb-icon">🤖</div>
+                        <div class="fb-label" style="color:var(--green)">AGENT</div>
+                        <div style="font-size:0.72rem;color:var(--muted2);margin-top:0.2rem;">Autonomous System</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+                <p
+                    style="margin-bottom:0.8rem; color:var(--text); font-size:0.87rem; font-family:'Clash Display',sans-serif; font-weight:600;">
+                    Key difference from a plain LLM:</p>
+                <div class="grid2">
+                    <div class="card">
+                        <h4 style="color:var(--muted2)">🤔 Plain LLM</h4>
+                        <ul>
+                            <li>Generates one response</li>
+                            <li>No external action</li>
+                            <li>Single-step reasoning</li>
+                            <li>No memory between calls</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4 style="color:var(--green)">🤖 AI Agent</h4>
+                        <ul>
+                            <li>Plans multi-step autonomously</li>
+                            <li>Calls real tools/APIs</li>
+                            <li>Loops until task is done</li>
+                            <li>Maintains context across steps</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+     TOPIC 3 — 5 KEY PROPERTIES
+═══════════════════════════════════════════ -->
+        <div class="topic t3">
+            <div class="topic-header">
+                <span class="topic-num">71</span>
+                <div class="topic-icon">✨</div>
+                <h2>AI Agent — 5 Key Properties</h2>
+            </div>
+            <div class="topic-body">
+                <div class="props">
+                    <div class="prop-badge">
+                        <div class="prop-icon">🎯</div>
+                        <div class="prop-name" style="color:var(--orange)">Goal-driven</div>
+                        <div class="prop-desc">You tell the agent <em>what</em> you want, not <em>how</em> to do it
+                        </div>
+                    </div>
+                    <div class="prop-badge">
+                        <div class="prop-icon">🔨</div>
+                        <div class="prop-name" style="color:var(--orange)">Autonomous Planning</div>
+                        <div class="prop-desc">Agent breaks down the problem and sequences tasks on its own</div>
+                    </div>
+                    <div class="prop-badge">
+                        <div class="prop-icon">🧰</div>
+                        <div class="prop-name" style="color:var(--orange)">Tool-using</div>
+                        <div class="prop-desc">Agent calls APIs, calculators, search tools, databases, etc.</div>
+                    </div>
+                    <div class="prop-badge">
+                        <div class="prop-icon">💬</div>
+                        <div class="prop-name" style="color:var(--orange)">Context-aware</div>
+                        <div class="prop-desc">Maintains memory across steps to inform future actions</div>
+                    </div>
+                    <div class="prop-badge">
+                        <div class="prop-icon">🔄</div>
+                        <div class="prop-name" style="color:var(--orange)">Adaptive</div>
+                        <div class="prop-desc">Rethinks plan when things change (API fails, no data, etc.)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+     TOPIC 4 — REACT PATTERN
+═══════════════════════════════════════════ -->
+        <div class="topic t4">
+            <div class="topic-header">
+                <span class="topic-num">72</span>
+                <div class="topic-icon">⚡</div>
+                <h2>ReAct — Reasoning + Acting</h2>
+            </div>
+            <div class="topic-body">
+                <div class="def"><strong>ReAct</strong> = <strong>Re</strong>asoning + <strong>Act</strong>ing. A design
+                    pattern for AI agents where the LLM <strong>interleaves</strong> internal Thought with external
+                    Actions (tool use) in a structured, multi-step loop — instead of generating an answer in one go.
+                </div>
+
+                <!-- Loop Diagram -->
+                <div class="react-loop">
+                    <div class="loop-node" style="border-color:var(--purple); background:var(--purple-dim);">
+                        <div class="ln-label" style="color:var(--purple)">💭 Thought</div>
+                        <div class="ln-sub">What do I do next?</div>
+                    </div>
+                    <div class="loop-arrow">→</div>
+                    <div class="loop-node" style="border-color:var(--blue); background:var(--blue-dim);">
+                        <div class="ln-label" style="color:var(--blue)">⚡ Action</div>
+                        <div class="ln-sub">Call a tool</div>
+                    </div>
+                    <div class="loop-arrow">→</div>
+                    <div class="loop-node" style="border-color:var(--green); background:var(--green-dim);">
+                        <div class="ln-label" style="color:var(--green)">👁 Observation</div>
+                        <div class="ln-sub">Tool result</div>
+                    </div>
+                    <div class="loop-arrow">→</div>
+                    <div class="loop-node" style="border-color:var(--orange); background:var(--orange-dim);">
+                        <div class="ln-label" style="color:var(--orange)">✅ Final Answer</div>
+                        <div class="ln-sub">Or loop again</div>
+                    </div>
+                    <div class="loop-repeat">↺ This Thought → Action → Observation cycle repeats N times until Final
+                        Answer is reached</div>
+                </div>
+
+                <p style="margin-bottom:0.8rem;"><strong>ReAct is useful for:</strong></p>
+                <div class="grid3">
+                    <div class="card">
+                        <h4 style="color:var(--purple)">Multi-step Problems</h4>
+                        <p>Tasks that require multiple queries and decisions</p>
+                    </div>
+                    <div class="card">
+                        <h4 style="color:var(--purple)">Tool-augmented Tasks</h4>
+                        <p>Web search, database lookup, API calls</p>
+                    </div>
+                    <div class="card">
+                        <h4 style="color:var(--purple)">Transparent Reasoning</h4>
+                        <p>Every thought is logged — auditable and debuggable</p>
+                    </div>
+                </div>
+
+                <div class="note">
+                    <div class="note-icon">📄</div>
+                    <div>Original paper: <strong style="color:var(--yellow)">"ReAct: Synergizing Reasoning and Acting in
+                            Language Models"</strong> — Yao et al., 2022. Princeton University + Google Research Brain
+                        Team.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+     TOPIC 5 — AGENT & AGENT EXECUTOR
+═══════════════════════════════════════════ -->
+        <div class="topic t5">
+            <div class="topic-header">
+                <span class="topic-num">73</span>
+                <div class="topic-icon">⚙️</div>
+                <h2>Agent &amp; Agent Executor</h2>
+            </div>
+            <div class="topic-body">
+                <div class="grid2">
+                    <div class="card">
+                        <h4 style="color:var(--pink)">🧠 Agent</h4>
+                        <ul>
+                            <li>The LLM brain</li>
+                            <li>Generates thought traces</li>
+                            <li>Decides next action</li>
+                            <li>Outputs <code>AgentAction</code> or <code>AgentFinish</code></li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4 style="color:var(--pink)">🔁 AgentExecutor</h4>
+                        <ul>
+                            <li>Orchestrates the entire loop</li>
+                            <li>Runs the tool called by agent</li>
+                            <li>Feeds result back to agent</li>
+                            <li>Loops until <code>Final Answer</code></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <p style="margin-bottom:0.7rem;"><strong>AgentExecutor Loop — 5 Steps:</strong></p>
+                <div class="steps">
+                    <div class="step"><span class="step-n">1</span>
+                        <div><strong>Send</strong> inputs + previous messages (scratchpad) to the agent</div>
+                    </div>
+                    <div class="step"><span class="step-n">2</span>
+                        <div><strong>Get</strong> the next action from agent (<code>AgentAction</code>)</div>
+                    </div>
+                    <div class="step"><span class="step-n">3</span>
+                        <div><strong>Execute</strong> that tool with the provided input</div>
+                    </div>
+                    <div class="step"><span class="step-n">4</span>
+                        <div><strong>Add</strong> the tool's observation back into the history (scratchpad)</div>
+                    </div>
+                    <div class="step"><span class="step-n">5</span>
+                        <div><strong>Loop</strong> again with updated history until agent says <code>Final Answer</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+     TOPIC 6 — REACT PROMPT TEMPLATE
+═══════════════════════════════════════════ -->
+        <div class="topic t6">
+            <div class="topic-header">
+                <span class="topic-num">74</span>
+                <div class="topic-icon">📝</div>
+                <h2>ReAct Prompt Template</h2>
+            </div>
+            <div class="topic-body">
+                <div class="def">The ReAct prompt is a <strong>StringPromptTemplate</strong> pulled from LangChain Hub
+                    that instructs the LLM to follow the Thought → Action → Observation format. It provides the exact
+                    format the agent must follow.</div>
+
+                <p style="margin-bottom:0.5rem;">Pull from LangChain Hub:</p>
+                <pre><span class="kw">from</span> langchain <span class="kw">import</span> hub
+prompt = hub.<span class="fn">pull</span>(<span class="st">"hwchase17/react"</span>)  <span class="cm"># standard ReAct prompt</span></pre>
+
+                <p style="margin-bottom:0.5rem;">Prompt structure:</p>
+                <div class="prompt-box">
+                    <span class="prompt-meta">Answer the following questions as best you can. You have access to the
+                        following tools:</span>
+                    <span class="prompt-var">{tools}</span>
+
+                    <span class="prompt-meta">Use the following format:</span>
+
+                    <span class="prompt-label">Question:</span> <span class="prompt-value">the input question you must
+                        answer</span>
+                    <span class="prompt-label">Thought:</span> <span class="prompt-value">you should always think about
+                        what to do</span>
+                    <span class="prompt-label">Action:</span> <span class="prompt-value">the action to take, should be
+                        one of [<span class="prompt-var">{tool_names}</span>]</span>
+                    <span class="prompt-label">Action Input:</span> <span class="prompt-value">the input to the
+                        action</span>
+                    <span class="prompt-label">Observation:</span> <span class="prompt-value">the result of the
+                        action</span>
+                    <span class="prompt-meta">... (this Thought/Action/Action Input/Observation can repeat N
+                        times)</span>
+                    <span class="prompt-label">Thought:</span> <span class="prompt-value">I now know the final
+                        answer</span>
+                    <span class="prompt-label">Final Answer:</span> <span class="prompt-value">the final answer to the
+                        original input question</span>
+
+                    <span class="prompt-label">Question:</span> <span class="prompt-var">{input}</span>
+                    <span class="prompt-label">Thought:</span> <span class="prompt-var">{agent_scratchpad}</span>
+                </div>
+                <div class="props" style="gap:0.5rem;">
+                    <div
+                        style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.8rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--purple);">
+                        {tools}</div>
+                    <div
+                        style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.8rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--purple);">
+                        {tool_names}</div>
+                    <div
+                        style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.8rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--purple);">
+                        {input}</div>
+                    <div
+                        style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.8rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--purple);">
+                        {agent_scratchpad}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+     TOPIC 7 — CREATING A REACT AGENT (CODE)
+═══════════════════════════════════════════ -->
+        <div class="topic t7">
+            <div class="topic-header">
+                <span class="topic-num">75</span>
+                <div class="topic-icon">💻</div>
+                <h2>Creating a ReAct Agent — Code</h2>
+            </div>
+            <div class="topic-body">
+                <div class="def">5-step process to build a working ReAct agent in LangChain using <strong>DuckDuckGo
+                        search</strong> as the tool.</div>
+
+                <div class="steps" style="margin-bottom:1rem;">
+                    <div class="step"><span class="step-n">S1</span>
+                        <div><strong>Create Tools</strong> — import and instantiate <code>DuckDuckGoSearchRun</code>
+                        </div>
+                    </div>
+                    <div class="step"><span class="step-n">S2</span>
+                        <div><strong>Pull Prompt</strong> — get standard ReAct prompt from LangChain Hub</div>
+                    </div>
+                    <div class="step"><span class="step-n">S3</span>
+                        <div><strong>Create Agent</strong> — wire LLM + tools + prompt using
+                            <code>create_react_agent</code>
+                        </div>
+                    </div>
+                    <div class="step"><span class="step-n">S4</span>
+                        <div><strong>Wrap Executor</strong> — wrap agent in <code>AgentExecutor</code> which runs the
+                            loop</div>
+                    </div>
+                    <div class="step"><span class="step-n">S5</span>
+                        <div><strong>Invoke</strong> — call with user query and get final answer</div>
+                    </div>
+                </div>
+
+                <pre><span class="kw">from</span> langchain_openai <span class="kw">import</span> <span class="fn">ChatOpenAI</span>
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> langchain_community.tools <span class="kw">import</span> <span class="fn">DuckDuckGoSearchRun</span>
+<span class="kw">from</span> langchain.agents <span class="kw">import</span> <span class="fn">create_react_agent</span>, <span class="fn">AgentExecutor</span>
+<span class="kw">from</span> langchain <span class="kw">import</span> hub
+
+<span class="cm"># Step 1: Tool</span>
+search_tool = <span class="fn">DuckDuckGoSearchRun</span>()
+
+<span class="cm"># Step 2: Prompt</span>
+prompt = hub.<span class="fn">pull</span>(<span class="st">"hwchase17/react"</span>)
+
+<span class="cm"># Step 3: Agent (LLM + tools + prompt)</span>
+llm = <span class="fn">ChatOpenAI</span>()
+agent = <span class="fn">create_react_agent</span>(
+    llm=llm,
+    tools=[search_tool],
+    prompt=prompt
+)
+
+<span class="cm"># Step 4: Executor (runs the loop)</span>
+agent_executor = <span class="fn">AgentExecutor</span>(
+    agent=agent,
+    tools=[search_tool],
+    verbose=<span class="tp">True</span>
+)
+
+<span class="cm"># Step 5: Invoke</span>
+response = agent_executor.<span class="fn">invoke</span>({<span class="st">"input"</span>: <span class="st">"3 ways to reach goa from delhi"</span>})
+<span class="cm"># output → 'The 3 common ways to reach Goa from Delhi are by air, train, and road.'</span></pre>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+     TOPIC 8 — CREATING AN AGENT EXECUTOR
+═══════════════════════════════════════════ -->
+        <div class="topic t8">
+            <div class="topic-header">
+                <span class="topic-num">76</span>
+                <div class="topic-icon">🔁</div>
+                <h2>Creating an Agent Executor</h2>
+            </div>
+            <div class="topic-body">
+                <div class="def"><strong>AgentExecutor</strong> is the runtime that wraps the agent and manages the full
+                    Thought → Action → Observation loop automatically. It handles tool execution and scratchpad updates.
+                </div>
+                <pre>agent_executor = <span class="fn">AgentExecutor</span>(
+    agent=agent,       <span class="cm"># the ReAct agent (LLM brain)</span>
+    tools=[search_tool],  <span class="cm"># same tools given to agent</span>
+    verbose=<span class="tp">True</span>       <span class="cm"># prints full thought trace</span>
+)</pre>
+                <div class="grid2">
+                    <div class="card">
+                        <h4 style="color:var(--green)">verbose=True shows:</h4>
+                        <ul>
+                            <li>Entering AgentExecutor chain</li>
+                            <li>Each Thought statement</li>
+                            <li>Each Action + Action Input</li>
+                            <li>Each Observation result</li>
+                            <li>Final Answer</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4 style="color:var(--green)">What it manages:</h4>
+                        <ul>
+                            <li>Tool execution</li>
+                            <li>Scratchpad updates</li>
+                            <li>Loop until Final Answer</li>
+                            <li>Error handling</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+     TOPIC 9 — FLOW CHART
+═══════════════════════════════════════════ -->
+        <div class="topic t9">
+            <div class="topic-header">
+                <span class="topic-num">77</span>
+                <div class="topic-icon">📊</div>
+                <h2>AgentExecutor Flow Chart</h2>
+            </div>
+            <div class="topic-body">
+                <div class="def">The complete internal flow of what happens when you call
+                    <code>agent_executor.invoke()</code>. The agent response is a decision diamond — it either takes an
+                    action or finishes.
+                </div>
+
+                <!-- FLOWCHART VISUAL -->
+                <div class="flowchart">
+                    <div class="fc-title">⬇ AgentExecutor Internal Loop</div>
+                    <div class="fc-col">
+
+                        <div class="fc-node fc-blue" style="align-self:center;">🔵 Agent Executor</div>
+                        <div class="fc-arrow" style="margin:0 auto;"></div>
+
+                        <div class="fc-node fc-teal" style="align-self:center;">📥 Receive User Query</div>
+                        <div class="fc-arrow" style="margin:0 auto;"></div>
+
+                        <div class="fc-node fc-purple"
+                            style="align-self:center; white-space:normal; text-align:center; min-width:200px;">📋 Pass
+                            User Query +<br>Agent Scratchpad to Agent</div>
+                        <div class="fc-arrow" style="margin:0 auto;"></div>
+
+                        <div class="fc-diamond" style="align-self:center;">Agent<br>Response</div>
+
+                        <!-- Two branches -->
+                        <div style="display:flex; gap:4rem; justify-content:center; width:100%; margin-top:0.3rem;">
+
+                            <!-- LEFT: Agent Action path -->
+                            <div class="fc-col" style="align-items:center;">
+                                <div class="fc-label" style="color:var(--orange)">AgentAction</div>
+                                <div class="fc-node fc-orange" style="min-width:130px;">⚡ Agent Action</div>
+                                <div
+                                    style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted2);text-align:left;background:#060709;border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.7rem;margin:0.4rem 0;line-height:1.7;">
+                                    tool=<span style="color:var(--green)">"search_tool"</span><br>
+                                    tool_input=<span style="color:var(--green)">"query"</span><br>
+                                    log=<span style="color:var(--muted2)">"Thought: ..."</span>
+                                </div>
+                                <div class="fc-arrow"></div>
+                                <div class="fc-node fc-blue" style="min-width:130px;">🔧 Execute Tool</div>
+                                <div class="fc-arrow"></div>
+                                <div class="fc-node fc-teal" style="min-width:130px;">👁 Collect Observation</div>
+                                <div class="fc-arrow"></div>
+                                <div class="fc-node fc-purple" style="min-width:130px;">📝 Update Scratchpad</div>
+                                <div
+                                    style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--orange);margin-top:0.5rem;">
+                                    ↺ Loop back to Agent</div>
+                            </div>
+
+                            <!-- RIGHT: Agent Finish path -->
+                            <div class="fc-col" style="align-items:center;">
+                                <div class="fc-label" style="color:var(--green)">AgentFinish</div>
+                                <div class="fc-node fc-green" style="min-width:130px;">✅ Agent Finish</div>
+                                <div
+                                    style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted2);text-align:left;background:#060709;border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.7rem;margin:0.4rem 0;line-height:1.7;">
+                                    return_values=<span style="color:var(--green)">{output: "..."}</span><br>
+                                    log=<span style="color:var(--muted2)">"Thought: I now know..."</span>
+                                </div>
+                                <div class="fc-arrow"></div>
+                                <div class="fc-node fc-green" style="min-width:130px;">📤 Return Final Output</div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid2">
+                    <div class="obj-box">
+                        <div class="obj-name">AgentAction(</div>
+                        <div> <span class="obj-key">tool</span>=<span class="obj-val">"search_tool"</span>,</div>
+                        <div> <span class="obj-key">tool_input</span>=<span class="obj-val">"capital of France"</span>,
+                        </div>
+                        <div> <span class="obj-key">log</span>=<span class="obj-val">"Thought: I need to find..."</span>
+                        </div>
+                        <div>)</div>
+                    </div>
+                    <div class="obj-box">
+                        <div class="obj-name">AgentFinish(</div>
+                        <div> <span class="obj-key">return_values</span>={</div>
+                        <div> <span class="obj-val">"output": "The capital is Paris..."</span></div>
+                        <div> },</div>
+                        <div> <span class="obj-key">log</span>=<span class="obj-val">"Thought: I now know..."</span>
+                        </div>
+                        <div>)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+     TOPIC 10 — WALKTHROUGH EXAMPLE
+═══════════════════════════════════════════ -->
+        <div class="topic t10">
+            <div class="topic-header">
+                <span class="topic-num">78</span>
+                <div class="topic-icon">🔍</div>
+                <h2>Flow Chart — Walkthrough Example</h2>
+            </div>
+            <div class="topic-body">
+                <div class="def">Step-by-step trace of what happens inside the agent for the query: <strong>"What is the
+                        capital of France and what is its population?"</strong></div>
+
+                <div class="walkthrough">
+                    <div class="wt-step thought">
+                        <span class="wt-badge">THOUGHT 1</span>
+                        <p>"I need to find the capital of France first."</p>
+                    </div>
+                    <div class="wt-step action">
+                        <span class="wt-badge">ACTION 1</span>
+                        <p><code>search_tool</code> ← input: <code>"capital of France"</code></p>
+                    </div>
+                    <div class="wt-step observe">
+                        <span class="wt-badge">OBSERVATION 1</span>
+                        <p>"Paris is the capital of France."</p>
+                    </div>
+
+                    <div class="wt-step thought">
+                        <span class="wt-badge">THOUGHT 2</span>
+                        <p>"Now I need to find the population of Paris."</p>
+                    </div>
+                    <div class="wt-step action">
+                        <span class="wt-badge">ACTION 2</span>
+                        <p><code>search_tool</code> ← input: <code>"population of Paris"</code></p>
+                    </div>
+                    <div class="wt-step observe">
+                        <span class="wt-badge">OBSERVATION 2</span>
+                        <p>"Paris has a population of approximately 2.1 million."</p>
+                    </div>
+
+                    <div class="wt-step thought">
+                        <span class="wt-badge">THOUGHT 3</span>
+                        <p>"I now know the final answer."</p>
+                    </div>
+                    <div class="wt-step finish">
+                        <span class="wt-badge">✅ FINAL ANSWER</span>
+                        <p>"Paris is the capital of France and has a population of approximately 2.1 million."</p>
+                    </div>
+                </div>
+
+                <p style="margin-bottom:0.6rem;"><strong>Agent Scratchpad after Step 2 (what gets sent back to
+                        LLM):</strong></p>
+                <div class="prompt-box" style="font-size:0.74rem;">
+                    <span class="prompt-label">Thought:</span> <span class="prompt-value">I need to find the capital of
+                        France first.</span>
+                    <span class="prompt-label">Action:</span> <span class="prompt-value">search_tool</span>
+                    <span class="prompt-label">Action Input:</span> <span class="prompt-value">"capital of
+                        France"</span>
+                    <span class="prompt-label">Observation:</span> <span class="prompt-value">Paris is the capital of
+                        France.</span>
+                    <span class="prompt-label">Thought:</span> <span class="prompt-value">Now I need to find the
+                        population of Paris.</span>
+                    <span class="prompt-label">Action:</span> <span class="prompt-value">search_tool</span>
+                    <span class="prompt-label">Action Input:</span> <span class="prompt-value">"population of
+                        Paris"</span>
+                    <span class="prompt-label">Observation:</span> <span class="prompt-value">Paris has a population of
+                        approximately 2.1 million.</span>
+                    <span class="prompt-label">Thought:</span> <span class="prompt-meta">(LLM continues from
+                        here...)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+     TOPIC 11 — MULTI-TOOL AGENT
+═══════════════════════════════════════════ -->
+        <div class="topic t11">
+            <div class="topic-header">
+                <span class="topic-num">79</span>
+                <div class="topic-icon">🛠️</div>
+                <h2>Improving the Code — Multi-Tool Agent</h2>
+            </div>
+            <div class="topic-body">
+                <div class="def">Upgrade the agent with a <strong>second custom tool</strong> —
+                    <code>get_weather_data</code> using WeatherStack API. Now the agent can chain two different tools:
+                    first search, then weather lookup.
+                </div>
+
+                <p style="margin-bottom:0.5rem;"><strong>New custom tool:</strong></p>
+                <pre><span class="kw">import</span> requests
+<span class="kw">from</span> langchain_core.tools <span class="kw">import</span> <span class="dc">tool</span>
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">get_weather_data</span>(city: <span class="tp">str</span>) -> <span class="tp">str</span>:
+    <span class="st">"""This function fetches the current weather data for a given city"""</span>
+    url = <span class="fn">f</span><span class="st">'https://api.weatherstack.com/current?access_key=&lt;API_KEY&gt;&query={city}'</span>
+    response = requests.<span class="fn">get</span>(url)
+    <span class="kw">return</span> response.<span class="fn">json</span>()</pre>
+
+                <p style="margin-bottom:0.5rem;"><strong>Updated full agent with 2 tools:</strong></p>
+                <pre><span class="cm"># Step 1: Both tools</span>
+search_tool = <span class="fn">DuckDuckGoSearchRun</span>()
+<span class="cm"># get_weather_data defined above with @tool</span>
+
+<span class="cm"># Step 2: Prompt</span>
+prompt = hub.<span class="fn">pull</span>(<span class="st">"hwchase17/react"</span>)
+
+<span class="cm"># Step 3: Agent — 2 tools now</span>
+agent = <span class="fn">create_react_agent</span>(
+    llm=llm,
+    tools=[search_tool, get_weather_data],
+    prompt=prompt
+)
+
+<span class="cm"># Step 4: Executor — same tools list</span>
+agent_executor = <span class="fn">AgentExecutor</span>(
+    agent=agent,
+    tools=[search_tool, get_weather_data],
+    verbose=<span class="tp">True</span>
+)
+
+<span class="cm"># Step 5: Multi-tool query</span>
+response = agent_executor.<span class="fn">invoke</span>({
+    <span class="st">"input"</span>: <span class="st">"Find the capital of Madhya Pradesh, then find its current weather condition"</span>
+})</pre>
+
+                <p style="margin-bottom:0.6rem;"><strong>How the agent chains the tools:</strong></p>
+                <div class="walkthrough">
+                    <div class="wt-step thought">
+                        <span class="wt-badge">THOUGHT 1</span>
+                        <p>"I need to find the capital of Madhya Pradesh first."</p>
+                    </div>
+                    <div class="wt-step action">
+                        <span class="wt-badge">ACTION 1</span>
+                        <p><code>search_tool</code> ← <code>"capital of Madhya Pradesh"</code></p>
+                    </div>
+                    <div class="wt-step observe">
+                        <span class="wt-badge">OBSERVATION 1</span>
+                        <p>"Bhopal is the capital of Madhya Pradesh."</p>
+                    </div>
+                    <div class="wt-step thought">
+                        <span class="wt-badge">THOUGHT 2</span>
+                        <p>"Now I should get the weather in Bhopal."</p>
+                    </div>
+                    <div class="wt-step action">
+                        <span class="wt-badge">ACTION 2</span>
+                        <p><code>get_weather_data</code> ← <code>"Bhopal"</code></p>
+                    </div>
+                    <div class="wt-step observe">
+                        <span class="wt-badge">OBSERVATION 2</span>
+                        <p>Weather JSON with temperature, humidity, conditions...</p>
+                    </div>
+                    <div class="wt-step finish">
+                        <span class="wt-badge">✅ FINAL ANSWER</span>
+                        <p>"Bhopal is the capital of Madhya Pradesh. Current weather: [conditions from API]."</p>
+                    </div>
+                </div>
+
+                <div class="note">
+                    <div class="note-icon">💡</div>
+                    <div>The agent <strong>automatically decides</strong> which tool to use at each step based on the
+                        task — you don't need to specify the order. The ReAct reasoning pattern handles the sequencing.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /container -->
+
+    <footer>Building End-to-End AI Agents in LangChain · Module 12 · CampusX · Generative AI Series</footer>
+
+</body>
+
+</html>
