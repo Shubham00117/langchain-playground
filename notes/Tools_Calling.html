@@ -329,17 +329,72 @@
             margin-top: 0.15rem;
         }
 
-        /* Code */
-        pre {
-            background: var(--code-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.1rem 1.2rem;
-            overflow-x: auto;
+        /* Code block */
+        .code-block {
+            background: #1e1e2e;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .code-header {
+            background: #181825;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .lang-badge {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
+            font-size: 10px;
+            font-weight: 700;
+            color: #cdd6f4;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot-code {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-code.r {
+            background: #ff5f57;
+        }
+
+        .dot-code.y {
+            background: #febc2e;
+        }
+
+        .dot-code.g {
+            background: #28c840;
+        }
+
+        pre {
+            padding: 20px 22px;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
             line-height: 1.7;
-            margin-bottom: 1rem;
+            color: #cdd6f4;
+            white-space: pre;
         }
 
         .kw {
@@ -683,18 +738,38 @@
                         </div>
                     </div>
                 </div>
-                <pre><span class="cm"># Example — DuckDuckGo Search</span>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="cm"># Example — DuckDuckGo Search</span>
 <span class="kw">from</span> langchain_community.tools <span class="kw">import</span> <span class="fn">DuckDuckGoSearchRun</span>
 
 search_tool = <span class="fn">DuckDuckGoSearchRun</span>()
 results = search_tool.<span class="fn">invoke</span>(<span class="st">'top news in india today'</span>)
-<span class="fn">print</span>(results)</pre>
-                <pre><span class="cm"># Example — Shell Tool</span>
+<span class="fn">print</span>(results)</code></pre>
+                </div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="cm"># Example — Shell Tool</span>
 <span class="kw">from</span> langchain_community.tools <span class="kw">import</span> <span class="fn">ShellTool</span>
 
 shell_tool = <span class="fn">ShellTool</span>()
 results = shell_tool.<span class="fn">invoke</span>(<span class="st">'whoami'</span>)
-<span class="fn">print</span>(results)</pre>
+<span class="fn">print</span>(results)</code></pre>
+                </div>
             </div>
         </div>
 
@@ -747,7 +822,16 @@ results = shell_tool.<span class="fn">invoke</span>(<span class="st">'whoami'</s
                     </div>
                 </div>
 
-                <pre><span class="cm"># Method 1 — @tool decorator</span>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="cm"># Method 1 — @tool decorator</span>
 <span class="kw">from</span> langchain.tools <span class="kw">import</span> <span class="dc">tool</span>
 
 <span class="dc">@tool</span>
@@ -756,9 +840,19 @@ results = shell_tool.<span class="fn">invoke</span>(<span class="st">'whoami'</s
     <span class="kw">return</span> a * b
 
 result = multiply.<span class="fn">invoke</span>({<span class="st">"a"</span>: 3, <span class="st">"b"</span>: 5})  <span class="cm"># → 15</span>
-<span class="cm"># multiply.name, multiply.description, multiply.args</span></pre>
+<span class="cm"># multiply.name, multiply.description, multiply.args</span></code></pre>
+                </div>
 
-                <pre><span class="cm"># Method 2 — StructuredTool + Pydantic</span>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="cm"># Method 2 — StructuredTool + Pydantic</span>
 <span class="kw">from</span> langchain.tools <span class="kw">import</span> <span class="fn">StructuredTool</span>
 <span class="kw">from</span> pydantic <span class="kw">import</span> <span class="fn">BaseModel</span>, <span class="fn">Field</span>
 
@@ -774,9 +868,19 @@ multiply_tool = StructuredTool.<span class="fn">from_function</span>(
     name=<span class="st">"multiply"</span>,
     description=<span class="st">"Multiply two numbers"</span>,
     args_schema=<span class="tp">MultiplyInput</span>
-)</pre>
+)</code></pre>
+                </div>
 
-                <pre><span class="cm"># Method 3 — BaseTool class</span>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="dots">
+                            <div class="dot-code r"></div>
+                            <div class="dot-code y"></div>
+                            <div class="dot-code g"></div>
+                        </div>
+                        <span class="lang-badge">PYTHON</span>
+                    </div>
+                    <pre><code><span class="cm"># Method 3 — BaseTool class</span>
 <span class="kw">from</span> langchain.tools <span class="kw">import</span> <span class="fn">BaseTool</span>
 <span class="kw">from</span> typing <span class="kw">import</span> <span class="tp">Type</span>
 
@@ -789,7 +893,8 @@ multiply_tool = StructuredTool.<span class="fn">from_function</span>(
         <span class="kw">return</span> a * b
 
 multiply_tool = <span class="fn">MultiplyTool</span>()
-result = multiply_tool.<span class="fn">invoke</span>({<span class="st">'a'</span>: 3, <span class="st">'b'</span>: 3})  <span class="cm"># → 9</span></pre>
+result = multiply_tool.<span class="fn">invoke</span>({<span class="st">'a'</span>: 3, <span class="st">'b'</span>: 3})  <span class="cm"># → 9</span></code></pre>
+                </div>
 
                 <div class="def" style="margin-top:0.5rem">
                     <strong>Note:</strong> <code
