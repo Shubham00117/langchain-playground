@@ -837,10 +837,18 @@
             font-size: 0.77rem;
             line-height: 2;
             margin-bottom: 1rem;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            column-gap: 1rem;
+        }
+
+        .prompt-full {
+            grid-column: 1 / -1;
         }
 
         .prompt-label {
             color: var(--orange);
+            font-weight: 600;
         }
 
         .prompt-value {
@@ -1422,33 +1430,67 @@
 prompt = hub.<span class="fn">pull</span>(<span class="st">"hwchase17/react"</span>)  <span class="cm"># standard ReAct prompt</span></code></pre>
                 </div>
 
-                <p style="margin-bottom:0.5rem;">Prompt structure:</p>
+                <div class="note"
+                    style="background: rgba(127, 187, 179, 0.05); border-color: rgba(127, 187, 179, 0.2); color: #7fbbb3;">
+                    <div class="note-icon">☁️</div>
+                    <div><strong>LangChain Hub</strong> is a centralized repository (like GitHub for prompts) where the
+                        community shares and versions specialized prompt templates. <code>hub.pull()</code> lets you
+                        download these templates by name.</div>
+                </div>
+
+                <div class="note"
+                    style="background: rgba(155, 107, 247, 0.05); border-color: rgba(155, 107, 247, 0.2); color: #a78bfa;">
+                    <div class="note-icon">📒</div>
+                    <div><strong>{agent_scratchpad}</strong> is the agent's "working memory". It stores the intermediate
+                        Thought, Action, and Observation traces from previous steps so the LLM knows what it has already
+                        done and what to do next in the next loop.</div>
+                </div>
+
+                <p style="margin-top:2rem; margin-bottom:0.5rem;">Prompt structure:</p>
                 <div class="prompt-box">
-                    <span class="prompt-meta">Answer the following questions as best you can. You have access to the
-                        following tools:</span>
-                    <span class="prompt-var">{tools}</span>
+                    <div class="prompt-full prompt-meta">Answer the following questions as best you can. You have access
+                        to the following tools:</div>
+                    <div class="prompt-full prompt-var" style="margin-bottom: 0.5rem;">{tools}</div>
 
-                    <span class="prompt-meta">Use the following format:</span>
+                    <div class="prompt-full prompt-meta" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">Use the
+                        following format:</div>
 
-                    <span class="prompt-label">Question:</span> <span class="prompt-value">the input question you must
-                        answer</span>
-                    <span class="prompt-label">Thought:</span> <span class="prompt-value">you should always think about
-                        what to do</span>
-                    <span class="prompt-label">Action:</span> <span class="prompt-value">the action to take, should be
-                        one of [<span class="prompt-var">{tool_names}</span>]</span>
-                    <span class="prompt-label">Action Input:</span> <span class="prompt-value">the input to the
-                        action</span>
-                    <span class="prompt-label">Observation:</span> <span class="prompt-value">the result of the
-                        action</span>
-                    <span class="prompt-meta">... (this Thought/Action/Action Input/Observation can repeat N
-                        times)</span>
-                    <span class="prompt-label">Thought:</span> <span class="prompt-value">I now know the final
-                        answer</span>
-                    <span class="prompt-label">Final Answer:</span> <span class="prompt-value">the final answer to the
-                        original input question</span>
+                    <div class="prompt-label">Question:</div>
+                    <div class="prompt-value">the input question you must answer</div>
 
-                    <span class="prompt-label">Question:</span> <span class="prompt-var">{input}</span>
-                    <span class="prompt-label">Thought:</span> <span class="prompt-var">{agent_scratchpad}</span>
+                    <div class="prompt-label">Thought:</div>
+                    <div class="prompt-value">you should always think about what to do</div>
+
+                    <div class="prompt-label">Action:</div>
+                    <div class="prompt-value">the action to take, should be one of [<span
+                            class="prompt-var">{tool_names}</span>]</div>
+
+                    <div class="prompt-label">Action Input:</div>
+                    <div class="prompt-value">the input to the action</div>
+
+                    <div class="prompt-label">Observation:</div>
+                    <div class="prompt-value">the result of the action</div>
+
+                    <div class="prompt-full prompt-meta"
+                        style="margin-top: 0.5rem; padding-left: 1rem; border-left: 1px dashed var(--border2); line-height: 1.5; margin-bottom: 0.5rem;">
+                        ... (this Thought/Action/Action Input/Observation can repeat N times)
+                    </div>
+
+                    <div class="prompt-label">Thought:</div>
+                    <div class="prompt-value">I now know the final answer</div>
+
+                    <div class="prompt-label">Final Answer:</div>
+                    <div class="prompt-value">the final answer to the original input question</div>
+
+                    <div class="prompt-label"
+                        style="margin-top: 0.8rem; border-top: 1px solid var(--border); padding-top: 0.5rem;">Question:
+                    </div>
+                    <div class="prompt-var"
+                        style="margin-top: 0.8rem; border-top: 1px solid var(--border); padding-top: 0.5rem;">{input}
+                    </div>
+
+                    <div class="prompt-label">Thought:</div>
+                    <div class="prompt-var">{agent_scratchpad}</div>
                 </div>
                 <div class="props" style="gap:0.5rem;">
                     <div
@@ -1704,65 +1746,78 @@ response = agent_executor.<span class="fn">invoke</span>({<span class="st">"inpu
                 <h2>Flow Chart — Walkthrough Example</h2>
             </div>
             <div class="topic-body">
-                <div class="def">Step-by-step trace of what happens inside the agent for the query: <strong>"What is the
-                        capital of France and what is its population?"</strong></div>
+                <div class="def">A complete trace showing how the <strong>AgentExecutor</strong> processes a
+                    multi-step query using the <strong>ReAct loop</strong> — from user input to final answer.</div>
+
+                <p style="margin-bottom:0.6rem;"><strong style="color:var(--text)">Query:</strong> <strong
+                        style="color:var(--green)">"What is the capital of France and its population?"</strong></p>
+                <p style="margin-bottom:1rem;">Tool: <code>search_tool</code> (DuckDuckGo)</p>
 
                 <div class="walkthrough">
+                    <!-- Loop 1 -->
                     <div class="wt-step thought">
                         <span class="wt-badge">THOUGHT 1</span>
-                        <p>"I need to find the capital of France first."</p>
+                        <p>I need to find the capital of France first.</p>
                     </div>
                     <div class="wt-step action">
                         <span class="wt-badge">ACTION 1</span>
-                        <p><code>search_tool</code> ← input: <code>"capital of France"</code></p>
+                        <p><code>search_tool</code> ← <code>"capital of France"</code></p>
                     </div>
                     <div class="wt-step observe">
                         <span class="wt-badge">OBSERVATION 1</span>
-                        <p>"Paris is the capital of France."</p>
+                        <p>Paris is the capital of France.</p>
                     </div>
 
+                    <!-- Loop 2 -->
                     <div class="wt-step thought">
                         <span class="wt-badge">THOUGHT 2</span>
-                        <p>"Now I need to find the population of Paris."</p>
+                        <p>Now I need the population of Paris.</p>
                     </div>
                     <div class="wt-step action">
                         <span class="wt-badge">ACTION 2</span>
-                        <p><code>search_tool</code> ← input: <code>"population of Paris"</code></p>
+                        <p><code>search_tool</code> ← <code>"population of Paris"</code></p>
                     </div>
                     <div class="wt-step observe">
                         <span class="wt-badge">OBSERVATION 2</span>
-                        <p>"Paris has a population of approximately 2.1 million."</p>
+                        <p>Paris has a population of approximately 2.1 million.</p>
                     </div>
 
+                    <!-- Final -->
                     <div class="wt-step thought">
                         <span class="wt-badge">THOUGHT 3</span>
-                        <p>"I now know the final answer."</p>
+                        <p>I now know the final answer.</p>
                     </div>
                     <div class="wt-step finish">
                         <span class="wt-badge">✅ FINAL ANSWER</span>
-                        <p>"Paris is the capital of France and has a population of approximately 2.1 million."</p>
+                        <p>Paris is the capital of France and has a population of approximately 2.1 million.</p>
                     </div>
                 </div>
 
-                <p style="margin-bottom:0.6rem;"><strong>Agent Scratchpad after Step 2 (what gets sent back to
-                        LLM):</strong></p>
+                <div class="divider"></div>
+
+                <p style="margin-bottom:0.5rem;"><strong>What {agent_scratchpad} looked like before Loop 2:</strong></p>
                 <div class="prompt-box" style="font-size:0.74rem;">
-                    <span class="prompt-label">Thought:</span> <span class="prompt-value">I need to find the capital of
-                        France first.</span>
-                    <span class="prompt-label">Action:</span> <span class="prompt-value">search_tool</span>
-                    <span class="prompt-label">Action Input:</span> <span class="prompt-value">"capital of
-                        France"</span>
-                    <span class="prompt-label">Observation:</span> <span class="prompt-value">Paris is the capital of
-                        France.</span>
-                    <span class="prompt-label">Thought:</span> <span class="prompt-value">Now I need to find the
-                        population of Paris.</span>
-                    <span class="prompt-label">Action:</span> <span class="prompt-value">search_tool</span>
-                    <span class="prompt-label">Action Input:</span> <span class="prompt-value">"population of
-                        Paris"</span>
-                    <span class="prompt-label">Observation:</span> <span class="prompt-value">Paris has a population of
-                        approximately 2.1 million.</span>
-                    <span class="prompt-label">Thought:</span> <span class="prompt-meta">(LLM continues from
-                        here...)</span>
+                    <div class="prompt-label">Thought:</div>
+                    <div class="prompt-value">I need to find the capital of France first.</div>
+
+                    <div class="prompt-label">Action:</div>
+                    <div class="prompt-value">search_tool</div>
+
+                    <div class="prompt-label">Action Input:</div>
+                    <div class="prompt-value">"capital of France"</div>
+
+                    <div class="prompt-label">Observation:</div>
+                    <div class="prompt-value">Paris is the capital of France.</div>
+
+                    <div class="prompt-label">Thought:</div>
+                    <div class="prompt-meta">(LLM continues from here...)</div>
+                </div>
+
+                <div class="note">
+                    <div class="note-icon">💡</div>
+                    <div>Each loop adds its Thought + Action + Observation to the <strong>scratchpad</strong>. The LLM
+                        reads this growing history to decide what to do next — or stop with a <strong>Final
+                            Answer</strong>.</div>
                 </div>
             </div>
         </div>
